@@ -1,0 +1,10 @@
+import fs from 'node:fs/promises';
+import { Presentation, PresentationFile } from '@oai/artifact-tool';
+const p=Presentation.create({slideSize:{width:1280,height:720}});
+const s=p.slides.add(); s.background.fill='#F7F5FC';
+const t=s.shapes.add({geometry:'textbox',position:{left:70,top:70,width:1140,height:120},fill:'none',line:{fill:'none',width:0}});
+t.text='NeuroQuest';t.text.style={fontSize:64,typeface:'Arial',bold:true,color:'#221B38',autoFit:'none'};
+await(await PresentationFile.exportPptx(p)).save('C:/Users/Dell/Desktop/nice one/.presentation-build/smoke.pptx');
+const b=await p.export({slide:s,format:'png',scale:1});
+await fs.writeFile('C:/Users/Dell/Desktop/nice one/.presentation-build/smoke.png',new Uint8Array(await b.arrayBuffer()));
+console.log('Presentation export and rendering ready');

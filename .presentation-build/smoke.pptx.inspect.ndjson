@@ -1,0 +1,6 @@
+{"kind":"deck","id":"pr/tddrwe","name":"Deck"}
+{"kind":"layout","layoutId":"4697b61d-34ed-4e98-b979-922864e17194","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"991a152e-0c47-4761-a0d5-d2d638b4fcf0","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/gqntmw","slide":1,"title":"NeuroQuest","textShapes":1}
+{"kind":"textbox","id":"sh/4f69kfu5","slide":1,"text":"NeuroQuest","textPreview":"NeuroQuest","textChars":10,"textLines":1,"bbox":[70,70,1140,120]}
+{"kind":"notes","id":"nt/gqntmw","slide":1,"text":""}

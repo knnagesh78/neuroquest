@@ -1,0 +1,523 @@
+[
+  {
+    "type": "cover",
+    "title": "NeuroQuest",
+    "subtitle": "The 3D Spatial Memory Palace\nfor Education",
+    "notes": "Good morning respected lecturers and fellow students. We are presenting NeuroQuest, a web application that gives study concepts a place inside a virtual memory palace. A student can attach a note to an object, return to its location, and try to remember the concept before opening the answer. Today we will explain the purpose, demonstrate the learning process, and describe how the website works. The current implementation runs in the browser and saves study data locally.\nSource: README.md and src/components/NeuroQuest.tsx. Cover image is an AI-generated concept illustration, not a screenshot of the application."
+  },
+  {
+    "type": "purpose",
+    "title": "The purpose of NeuroQuest",
+    "lead": "Help students organize concepts in memorable places and practise recalling them before checking their notes.",
+    "items": [
+      [
+        "A place for each idea",
+        "Connect a concept with an object and a location."
+      ],
+      [
+        "A reason to retrieve",
+        "Hide the answer during Recall Challenge."
+      ],
+      [
+        "A personal study space",
+        "Create subject palaces and track self-rated progress."
+      ]
+    ],
+    "notes": "The main purpose is to support an active study habit. Students often have many notes, but need a practical way to return to a concept and check whether they can remember it. NeuroQuest combines a spatial cue with a recall prompt. The 3D object is the cue, the note contains the explanation, and the challenge asks the student to retrieve the idea before revealing it. The app supports revision. It does not replace explanation, problem solving, or a teacher's guidance.\nSource: README.md; src/components/ui/AnchorDrawer.tsx."
+  },
+  {
+    "type": "columns",
+    "title": "The learning problem",
+    "columns": [
+      {
+        "heading": "Study challenges",
+        "items": [
+          "Notes can become difficult to navigate.",
+          "Recognizing an answer can feel like remembering it.",
+          "Students need a simple way to revisit weak concepts."
+        ]
+      },
+      {
+        "heading": "Our design response",
+        "items": [
+          "Separate subjects into named palaces.",
+          "Use location and artifact identity as cues.",
+          "Reveal answers after a recall attempt and record a rating."
+        ]
+      }
+    ],
+    "foot": "The project addresses a study workflow. Its effect on student marks has not been measured.",
+    "notes": "This slide explains the problem our design aims to address, rather than claiming that every student has the same difficulty. NeuroQuest offers a visual route through study material and a deliberate pause before viewing an answer. Research on retrieval practice motivates the recall step. However, we have not run a controlled educational study of this particular application, so we cannot claim a percentage improvement in memory or marks.\nSource: project requirements; Roediger and Karpicke (2006), https://doi.org/10.1111/j.1467-9280.2006.01693.x."
+  },
+  {
+    "type": "columns",
+    "title": "The memory palace idea",
+    "columns": [
+      {
+        "heading": "Method of Loci",
+        "items": [
+          "Associate information with distinct locations.",
+          "Use a familiar route to revisit those associations.",
+          "In NeuroQuest, a geometric artifact holds the note."
+        ]
+      },
+      {
+        "heading": "Active recall",
+        "items": [
+          "Look at the location and attempt an answer.",
+          "Reveal the concept and compare.",
+          "Rate the attempt and revisit what was difficult."
+        ]
+      }
+    ],
+    "foot": "Research motivates these techniques. It does not establish NeuroQuest's educational effectiveness.",
+    "notes": "The Method of Loci links information to places. NeuroQuest provides a digital space where the student can form those associations. A crystal might represent one concept while a ring represents another. During recall, the title is hidden and the student tries to identify the idea from its place. Research on mnemonic training and retrieval practice supports the rationale for exploring this approach, but those studies did not test NeuroQuest.\nSources: Dresler et al. (2017), https://doi.org/10.1016/j.neuron.2017.02.003; Roediger and Karpicke (2006), https://doi.org/10.1111/j.1467-9280.2006.01693.x."
+  },
+  {
+    "type": "rows",
+    "title": "What the website includes",
+    "rows": [
+      [
+        "Subject palaces",
+        "Computer Science, Human Anatomy, World History, and custom subjects."
+      ],
+      [
+        "Memory anchors",
+        "Notes linked to geometric artifacts, colors, and 3D positions."
+      ],
+      [
+        "Study tools",
+        "Explore, Recall Challenge, search, editing, and learning insights."
+      ],
+      [
+        "Accessible controls",
+        "Anchor lists and a map support the 3D view. An HTML fallback keeps study available."
+      ]
+    ],
+    "notes": "NeuroQuest begins with three example subjects. The new Create palace feature allows students to add other subjects, such as Mathematics or Chemistry. Every palace has its own anchors. Each anchor contains a title, category, Markdown content, shape, color, and position. Students can find anchors through the scene, map, list, or search. The anatomical and historical subjects currently use geometric artifacts and notes, not detailed anatomical simulations or reconstructed historical locations.\nSources: src/lib/data.ts; src/lib/types.ts; src/components/NeuroQuest.tsx; src/components/ui/AddRoomModal.tsx."
+  },
+  {
+    "type": "steps",
+    "title": "How a student uses NeuroQuest",
+    "steps": [
+      [
+        "01",
+        "Choose a subject",
+        "Open an existing palace or create a new one."
+      ],
+      [
+        "02",
+        "Add a concept",
+        "Write a focused note and select its artifact."
+      ],
+      [
+        "03",
+        "Explore the room",
+        "Learn the note and notice its location."
+      ],
+      [
+        "04",
+        "Try Recall Challenge",
+        "Attempt the answer before revealing it."
+      ],
+      [
+        "05",
+        "Rate and revisit",
+        "Choose Easy, Hard, or Failed and continue."
+      ]
+    ],
+    "notes": "This is the full student workflow. Begin with one small topic and a few clear anchors. In Explore mode, read and understand the material. Then switch to Recall Challenge, select an object, and answer aloud or on paper before revealing the note. Rate the attempt honestly. Easy marks the anchor as mastered, while Hard and Failed mark it as learning. Students choose when to return. The current version does not automatically schedule spaced repetition.\nSource: README.md, Explore and study and Recall challenge sections."
+  },
+  {
+    "type": "rows",
+    "title": "Creating a new subject palace",
+    "rows": [
+      [
+        "Open the form",
+        "Select Create palace under Your palaces. On mobile, open the navigation menu."
+      ],
+      [
+        "Make it recognizable",
+        "Enter a unique name, an optional description, an icon, and a color."
+      ],
+      [
+        "Add the first memory",
+        "The empty palace opens immediately, ready for a new anchor."
+      ],
+      [
+        "Keep it for later",
+        "Rooms and notes remain in the same browser after refresh."
+      ]
+    ],
+    "foot": "Current limits: 50 palaces, names up to 48 characters, and 300 anchors across the workspace.",
+    "notes": "To demonstrate the feature, create a subject such as Mathematics. Choose an icon and a color that make it easy to recognize in the sidebar. The palace begins empty, so the next action is to add a memory anchor. Recall Challenge stays disabled until the room contains an anchor. Duplicate palace names are rejected. These limits are validation choices in the current implementation, rather than claims about the maximum capacity of the underlying technologies.\nSources: src/components/ui/AddRoomModal.tsx; src/store/usePalaceStore.ts; src/components/ui/ModeSwitcher.tsx."
+  },
+  {
+    "type": "table",
+    "title": "Explore and Recall Challenge",
+    "columns": [
+      "Behavior",
+      "Explore",
+      "Recall Challenge"
+    ],
+    "widths": [
+      280,
+      430,
+      430
+    ],
+    "table": [
+      [
+        "Main purpose",
+        "Read and connect ideas",
+        "Retrieve before checking"
+      ],
+      [
+        "Anchor labels",
+        "Concept titles visible",
+        "Titles hidden as ???"
+      ],
+      [
+        "On selection",
+        "Open the study note",
+        "Show a recall prompt"
+      ],
+      [
+        "Next action",
+        "Read, edit, or add notes",
+        "Reveal and rate the attempt"
+      ],
+      [
+        "Progress",
+        "View existing status",
+        "Update mastery and review count"
+      ]
+    ],
+    "foot": "Ratings are self-assessments. The application does not automatically grade an answer.",
+    "notes": "These modes have different jobs. Explore mode supports learning the material and becoming familiar with the location. Recall Challenge removes the title cue and darkens the scene. After an attempt, the student reveals the concept and gives a rating. The app accepts one rating per anchor in a recall session. Changing the room or mode clears the session, but saved mastery and review counts remain.\nSources: src/components/ui/AnchorDrawer.tsx; src/components/three/Scene.tsx; src/store/usePalaceStore.ts."
+  },
+  {
+    "type": "example",
+    "title": "Example: a Computer Science concept",
+    "label": "BINARY TREES",
+    "lead": "Place the concept at a distinctive location, then use that location as a recall cue.",
+    "items": [
+      [
+        "Study note",
+        "A binary tree allows each node to have at most two children."
+      ],
+      [
+        "Recall prompt",
+        "What concept is anchored here? Explain the key idea before revealing it."
+      ],
+      [
+        "Follow-up practice",
+        "Draw a small tree and identify its root, leaves, and subtrees."
+      ]
+    ],
+    "foot": "Illustrative study activity. Understanding and worked examples still matter.",
+    "notes": "Imagine assigning Binary Trees to a memorable artifact near one corner of the room. First read the definition, draw an example, and connect the idea with that location. During Recall Challenge, identify the concept and explain it before revealing the note. A correct label alone is not the same as full understanding, so the student should also solve relevant exercises. The artifact is a memory cue. It is not a visual simulation of the data structure.\nSource: project workflow in README.md; illustrative classroom example."
+  },
+  {
+    "type": "columns",
+    "title": "Value for students and lecturers",
+    "columns": [
+      {
+        "heading": "For students",
+        "items": [
+          "A personal space for each subject.",
+          "A clear routine for practising recall.",
+          "Editable notes, categories, and code blocks.",
+          "Visible self-rated progress."
+        ]
+      },
+      {
+        "heading": "For lecturers",
+        "items": [
+          "A visual way to demonstrate a revision method.",
+          "Concept-based activities for classroom discussion.",
+          "A project that connects education with web graphics.",
+          "A starting point for a supervised learning study."
+        ]
+      }
+    ],
+    "foot": "Lecturer dashboards, shared classes, and automatic grading are future possibilities.",
+    "notes": "The practical value is the study workflow and the ability to make subject-specific spaces. Students can use it for terminology, definitions, historical events, or programming concepts. Lecturers can demonstrate how to build associations and ask students to explain a concept after recalling it. This version does not provide a teacher account or class analytics. Those would require additional backend and permission features. The benefits listed here describe intended uses and implemented affordances, not measured improvements in grades.\nSource: implemented features in README.md; proposed educational uses."
+  },
+  {
+    "type": "table",
+    "title": "Languages and technologies",
+    "columns": [
+      "Technology",
+      "Role in this project"
+    ],
+    "widths": [
+      360,
+      780
+    ],
+    "table": [
+      [
+        "TypeScript and TSX",
+        "Application logic, typed data, and React components"
+      ],
+      [
+        "HTML and CSS",
+        "Page structure, responsive layouts, and styling"
+      ],
+      [
+        "Next.js 16 and React 19",
+        "Application framework and interactive interface"
+      ],
+      [
+        "Three.js + R3F",
+        "WebGL graphics and React-managed 3D objects"
+      ],
+      [
+        "Zustand",
+        "Shared state and persistence on the device"
+      ],
+      [
+        "Node.js and npm",
+        "Development tools, build process, and local serving"
+      ]
+    ],
+    "foot": "Tailwind CSS, Drei, GSAP, Markdown libraries, and postprocessing support the experience.",
+    "notes": "TypeScript is the main programming language. TSX combines TypeScript with the component markup used by React. HTML describes the document structure and CSS controls its appearance. Next.js is a framework, React is a UI library, and Node.js is the runtime used for development and serving the build. Three.js handles the graphics, while React Three Fiber integrates that scene with React. JSON is a data format used for saved data and exports. There is no Python or Java backend in the website.\nSource: package.json; src/lib/types.ts; src/app/globals.css."
+  },
+  {
+    "type": "table",
+    "title": "Frontend architecture",
+    "columns": [
+      "Layer",
+      "Responsibility"
+    ],
+    "widths": [
+      390,
+      750
+    ],
+    "table": [
+      [
+        "App Router entry",
+        "Loads the application shell and client workspace"
+      ],
+      [
+        "NeuroQuest workspace",
+        "Navigation, search, settings, map, and progress"
+      ],
+      [
+        "Study panels",
+        "New rooms, notes, editing, recall, and ratings"
+      ],
+      [
+        "Zustand store",
+        "Validates actions and connects the UI with the scene"
+      ],
+      [
+        "3D scene components",
+        "Environment, anchors, camera, and visual effects"
+      ]
+    ],
+    "foot": "WebGL loads only in the browser. Unsaved form input stays in component state.",
+    "notes": "The frontend separates responsibilities into modules. The App Router page mounts the NeuroQuest workspace. The workspace brings together study controls and a dynamically loaded scene. The scene has server rendering disabled because WebGL requires the browser. Components subscribe to specific parts of the Zustand store. Unsaved form inputs remain local to the form, so typing does not update the shared scene state on every keystroke. This separation makes the implementation easier to maintain.\nSources: src/app/page.tsx; src/components/NeuroQuest.tsx; src/store/usePalaceStore.ts."
+  },
+  {
+    "type": "rows",
+    "title": "How the 3D experience works",
+    "rows": [
+      [
+        "Scene",
+        "Procedural architecture, lighting, a floor grid, and pedestals."
+      ],
+      [
+        "MemoryAnchor",
+        "Six artifact shapes with gentle hovering, rotation, and hover feedback."
+      ],
+      [
+        "CameraController",
+        "Bounded orbit controls and smooth focus transitions using GSAP."
+      ],
+      [
+        "PostProcessing",
+        "Bloom, vignette, and subtle chromatic aberration create atmosphere."
+      ]
+    ],
+    "foot": "Reduced-motion support, adjustable effects, and an HTML fallback support different devices.",
+    "notes": "Three.js renders the scene through WebGL. React Three Fiber manages declarative objects, and Drei provides useful controls and labels. Selecting an anchor updates a camera target. The camera controller moves to it smoothly, while bounded controls prevent extreme movement. Postprocessing adds a glow, with Bloom threshold 0.6 and intensity 1.2. Reduced-motion users receive immediate camera framing and no idle artifact movement. React Three Fiber disposes of declarative geometries and materials on unmount, and the camera controller cancels unused tweens.\nSources: src/components/three/Scene.tsx, MemoryAnchor.tsx, CameraController.tsx, PostProcessing.tsx."
+  },
+  {
+    "type": "columns",
+    "title": "Data and local persistence",
+    "columns": [
+      {
+        "heading": "Saved on this browser",
+        "items": [
+          "Rooms and memory anchors.",
+          "Mastery status and review counts.",
+          "Latest review time and selected preferences.",
+          "Schema version 2 with older-data migration."
+        ]
+      },
+      {
+        "heading": "Important boundaries",
+        "items": [
+          "No cross-device synchronization.",
+          "Clearing site data removes saved content.",
+          "JSON export is available.",
+          "An import screen and full review history are not included."
+        ]
+      }
+    ],
+    "foot": "Storage key: neuroquest-palace. localStorage is browser storage, not a backend database.",
+    "notes": "The app uses Zustand persistence to save selected state as JSON in localStorage. The saved data is validated when loaded. Version 1 data migrates to version 2, which includes custom rooms. Camera position and the current recall-session ratings are temporary. The stored latest review time and count are not a complete history of every answer. Export all palaces downloads a snapshot, but the app currently has no interface for importing that snapshot. Students should understand that their data belongs to this browser and origin.\nSource: src/store/usePalaceStore.ts; exportPalace in src/components/NeuroQuest.tsx."
+  },
+  {
+    "type": "columns",
+    "title": "Backend: current scope and future plan",
+    "columns": [
+      {
+        "heading": "Current implementation",
+        "items": [
+          "Next.js serves the built application.",
+          "Study logic runs in the browser.",
+          "No application API or server database.",
+          "No login, accounts, or shared classroom data."
+        ]
+      },
+      {
+        "heading": "Proposed extension",
+        "items": [
+          "Authenticated API for rooms and anchors.",
+          "Database tables for users and review events.",
+          "Ownership checks and controlled sharing.",
+          "Backup, synchronization, and conflict handling."
+        ]
+      }
+    ],
+    "foot": "A future option is Next.js Route Handlers with PostgreSQL. This is a proposal, not implemented functionality.",
+    "notes": "It is important to distinguish the web server from an application backend. Node.js and Next.js serve this website, but the project does not currently have server-side study APIs, accounts, or a database. A future version could add authenticated Route Handlers and PostgreSQL tables. Every request would need server-side validation and ownership checks. Shared classroom features would also need role and permission design. We should present this as future development, not describe it as an existing backend.\nSources: project source inventory, package.json, README.md. Future architecture is a proposal."
+  },
+  {
+    "type": "steps",
+    "title": "How the website was built",
+    "steps": [
+      [
+        "01",
+        "Model the learning data",
+        "Define rooms, anchors, modes, and retention types."
+      ],
+      [
+        "02",
+        "Build the workspace",
+        "Create navigation, note forms, drawers, and search."
+      ],
+      [
+        "03",
+        "Add the spatial scene",
+        "Connect artifacts and camera targets to shared state."
+      ],
+      [
+        "04",
+        "Implement recall and saving",
+        "Validate ratings, persist data, and migrate older records."
+      ],
+      [
+        "05",
+        "Verify and package",
+        "Run tests and checks, build, and serve the application."
+      ]
+    ],
+    "foot": "Local setup: npm ci, then npm run dev. Production: npm run build, then npm start.",
+    "notes": "This is a walkthrough of the implementation stages represented by the project. TypeScript types define the data. The UI then provides a way to create and inspect it. Zustand connects those actions to the 3D objects and camera. Recall logic updates retention status, while persistence keeps selected values after refresh. The project uses automated state tests, linting, type checks, formatting, and a production build. To run it locally, install Node.js 20.9 or newer, run npm ci, and start the development server.\nSources: README.md; package.json; tests/store.test.ts."
+  },
+  {
+    "type": "columns",
+    "title": "Quality, accessibility, and testing",
+    "columns": [
+      {
+        "heading": "Engineering checks",
+        "items": [
+          "19 automated store tests.",
+          "Validation of names, positions, and saved data.",
+          "Production build and lint checks passed.",
+          "Browser checks for custom rooms and persistence."
+        ]
+      },
+      {
+        "heading": "Usability support",
+        "items": [
+          "Responsive navigation and forms.",
+          "Keyboard focus handling and Escape to close.",
+          "Reduced-motion and effects controls.",
+          "HTML study fallback when WebGL is unavailable."
+        ]
+      }
+    ],
+    "foot": "Functional checks do not establish learning outcomes or guarantee performance on every device.",
+    "notes": "The automated tests focus on state behavior, including rating rules, room changes, adding and editing anchors, persistence, and migration. Recent browser checks verified the custom-room form on desktop and mobile layouts. The browser used for those checks showed the HTML fallback, so those checks do not establish 3D performance on every graphics device. For a college demonstration, test the actual laptop and projector in advance. Educational effectiveness needs a separate student study.\nSources: tests/store.test.ts; prior successful test/build results; UI verification; README.md."
+  },
+  {
+    "type": "columns",
+    "title": "Limitations and next steps",
+    "columns": [
+      {
+        "heading": "Current limitations",
+        "items": [
+          "Data stays on one browser and origin.",
+          "Ratings depend on honest self-assessment.",
+          "3D performance depends on the device.",
+          "No automatic revision schedule or class dashboard."
+        ]
+      },
+      {
+        "heading": "Future development",
+        "items": [
+          "Accounts, cloud storage, and restore/import.",
+          "Spaced revision and fuller review history.",
+          "Lecturer templates and permission-based sharing.",
+          "A classroom study with delayed recall testing."
+        ]
+      }
+    ],
+    "foot": "Future work should preserve the simple study flow and the accessible fallback.",
+    "notes": "We should describe both the value and the limits honestly. The current version offers an individual study experience. It has no cloud backup, and a mastery label is a student's own assessment. A future system could add scheduled revision, account-based access, and lecturer-created material. Before claiming a learning advantage, we would compare groups using the same content and study time, then measure recall after a delay. That would test the learning experience rather than only the software.\nSources: README.md; proposed roadmap and evaluation design."
+  },
+  {
+    "type": "steps",
+    "title": "Live demonstration",
+    "steps": [
+      [
+        "01",
+        "Open Computer Science",
+        "Select an anchor and explain its connection to a place."
+      ],
+      [
+        "02",
+        "Create Mathematics",
+        "Choose a name, icon, and color for a new palace."
+      ],
+      [
+        "03",
+        "Add one memory",
+        "Enter a short note and assign an artifact."
+      ],
+      [
+        "04",
+        "Run a recall attempt",
+        "Hide the title, attempt the answer, reveal, and rate."
+      ],
+      [
+        "05",
+        "Refresh the page",
+        "Show that the palace, note, and progress remain."
+      ]
+    ],
+    "foot": "Use demonstration notes. If 3D is unavailable, continue through the anchor list.",
+    "notes": "This demonstration takes about three minutes. Introduce one existing anchor first, then create a new subject only if there is no palace with that name already. Add a short concept such as the Pythagorean theorem, with its condition that the triangle is right-angled. Use Recall Challenge to demonstrate an answer attempt followed by reveal and rating. Refresh to show local saving. If the room fails to render, the HTML list still demonstrates the study workflow. Avoid deleting or changing another person's notes.\nSource: implemented workflow and fallback in README.md."
+  },
+  {
+    "type": "closing",
+    "title": "NeuroQuest's purpose",
+    "lead": "NeuroQuest turns subject notes into spatial memory cues and gives students a structured way to practise remembering.",
+    "foot": "Questions and discussion",
+    "notes": "To conclude, the purpose of NeuroQuest is to help students connect information with places and practise retrieval in a personal study environment. Our project combines a responsive frontend, interactive 3D graphics, and local persistence. The next stage is to test the experience with learners and, if useful, add a secure backend for synchronization and teaching workflows. Thank you. We welcome questions about the learning idea, how the website works, and what we would improve next.\nSource: project implementation and proposed roadmap."
+  }
+]
