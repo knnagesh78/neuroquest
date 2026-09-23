@@ -5,10 +5,14 @@
   "scripts": {
     "dev": "next dev --hostname 0.0.0.0",
     "build": "next build",
+    "build:hosting": "node scripts/build-hosting.mjs",
+    "deploy": "npm run build:hosting && firebase deploy --only auth,hosting,firestore --project neuroquest-c0cf0",
     "start": "next start --hostname 0.0.0.0",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:rules": "firebase emulators:exec --only auth,firestore --project demo-neuroquest \"vitest run --config vitest.rules.config.ts\"",
+    "emulators": "firebase emulators:start --only auth,firestore --project demo-neuroquest",
     "format": "prettier --write src tests *.ts *.mjs *.json README.md",
     "format:check": "prettier --check src tests *.ts *.mjs *.json README.md"
   },
@@ -18,6 +22,7 @@
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.4.0",
     "@react-three/postprocessing": "^3.0.4",
+    "firebase": "^12.19.0",
     "gsap": "^3.14.2",
     "lucide-react": "^0.577.0",
     "next": "^16.2.0",
@@ -30,6 +35,7 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.2",
     "@tailwindcss/postcss": "^4.2.1",
     "@types/node": "^24.0.0",
     "@types/react": "^19.2.0",
@@ -37,6 +43,7 @@
     "@types/three": "^0.183.1",
     "eslint": "^9.39.0",
     "eslint-config-next": "^16.2.0",
+    "firebase-tools": "^15.30.2",
     "prettier": "^3.6.2",
     "tailwindcss": "^4.2.1",
     "typescript": "^5.9.3",

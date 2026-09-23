@@ -282,6 +282,7 @@ function newId(): string {
 export function createPalaceStore(options?: {
   storage?: PersistStorage<PersistedPalaceState>;
   skipHydration?: boolean;
+  memoryOnly?: boolean;
 }) {
   return create<PalaceState>()(
     persist<PalaceState, [], [], PersistedPalaceState>(
@@ -487,12 +488,48 @@ export function createPalaceStore(options?: {
         migrate: (persistedState) => validatePersistedState(persistedState),
         merge: (persistedState, currentState) => ({
           ...currentState,
-          ...validatePersistedState(persistedState),
+          ...(options?.memoryOnly
+            ? {}
+            : validatePersistedState(persistedState)),
         }),
       },
     ),
   );
 }
 
-/** Subscribe with individual selectors so HUD edits do not invalidate the WebGL scene. */
-export const usePalaceStore = createPalaceStore({ skipHydration: true });
+/** Cloud sessions use memory only. Never persist one person's notes under a shared key. */
+export const usePalaceStore = createPalaceStore({
+  memoryOnly: true,
+  skipHydration: true,
+  storage: { getItem: () => null, setItem: () => {}, removeItem: () => {} },
+});
+
+export function workspaceData(
+  state: PersistedPalaceState,
+): PersistedPalaceState {
+  const { rooms, anchors, activeRoomId, mode, soundEnabled, effectsEnabled } =
+    state;
+  return { rooms, anchors, activeRoomId, mode, soundEnabled, effectsEnabled };
+}
+
+export function replaceWorkspace(data: PersistedPalaceState) {
+  usePalaceStore.setState({
+    ...data,
+    selectedAnchorId: null,
+    cameraTarget: null,
+    cameraResetKey: usePalaceStore.getState().cameraResetKey + 1,
+    isAddOpen: false,
+    sessionRatings: {},
+  });
+}
+
+export function clearWorkspace() {
+  replaceWorkspace({
+    rooms: [],
+    anchors: [],
+    activeRoomId: "",
+    mode: "explore",
+    soundEnabled: false,
+    effectsEnabled: true,
+  });
+}

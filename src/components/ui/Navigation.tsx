@@ -7,7 +7,7 @@ import {
   BookOpen,
   CircleHelp,
   ArrowUpRight,
-  ChevronDown,
+  Download,
   Plus,
   X,
   Sparkles,
@@ -16,6 +16,7 @@ import { usePalaceStore } from "@/store/usePalaceStore";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import RoomIcon from "./RoomIcon";
+import { useAccountStore } from "@/store/useAccountStore";
 
 export type WorkspacePage = "palace" | "insights" | "guide";
 type Props = {
@@ -34,6 +35,7 @@ export default function Navigation({
   onCreateRoom,
 }: Props) {
   const rooms = usePalaceStore((s) => s.rooms);
+  const username = useAccountStore((s) => s.username);
   const activeRoomId = usePalaceStore((s) => s.activeRoomId);
   const setRoom = usePalaceStore((s) => s.setRoom);
   const go = (next: WorkspacePage) => {
@@ -121,11 +123,15 @@ export default function Navigation({
           <X size={20} />
         </button>
         <div className="workspace-badge">
-          <span className="workspace-avatar">N</span>
-          <span>
-            Your workspace<small>A little room to grow</small>
+          <span className="workspace-avatar">
+            {username.slice(0, 1).toUpperCase()}
           </span>
-          <ChevronDown size={14} />
+          <span>
+            <span className="account-workspace-name" title={username}>
+              @{username}
+            </span>
+            <small>Your private workspace</small>
+          </span>
         </div>
         <p className="nav-caption">WORKSPACE</p>
         <nav className="primary-nav" aria-label="Main navigation">
@@ -188,6 +194,18 @@ export default function Navigation({
           </button>
         </nav>
         <div className="sidebar-bottom">
+          <button
+            className="help-link install-nav"
+            onClick={() => {
+              onClose();
+              setTimeout(
+                () => window.dispatchEvent(new Event("neuroquest:install")),
+                100,
+              );
+            }}
+          >
+            <Download size={17} /> Install NeuroQuest
+          </button>
           <div className="sidebar-note">
             <div className="note-orbit">
               <span />

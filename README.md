@@ -23,7 +23,7 @@ Requirements: **Node.js 20.9 or newer**, npm, and a modern browser. A WebGL-capa
 
 4. Open [localhost:3000](http://localhost:3000).
 
-No API keys, environment variables, database setup, or accounts are required. Fonts are bundled locally through Fontsource; the app does not fetch fonts from Google at build time.
+The supplied Firebase web project is configured. Enable Firebase Authentication and Firestore and publish the included security rules before registering real accounts. Follow [FIREBASE_SETUP.md](./FIREBASE_SETUP.md) for setup, local emulator tests, and HTTPS deployment. Fonts are bundled locally; no build-time Google Fonts request is needed.
 
 To create and serve a production build:
 
@@ -36,7 +36,7 @@ Run these commands in order; `npm start` serves an existing production build. If
 
 ## Explore and study
 
-To add a subject, select **Create palace** under **Your palaces** (open the navigation menu first on mobile). Enter a name, optionally add a description, choose an icon and color, then select **Create palace**. The new empty room opens immediately; select **Add memory anchor** to add your first concept. Palaces and their notes survive refreshes in the same browser. Names must be unique, with a limit of 48 characters and 50 total palaces.
+First sign in or create an account with a username and password. To add a subject, select **Create palace** under **Your palaces** (open navigation first on mobile). Enter a name, optionally add a description, choose an icon and color, then select **Create palace**. The new empty room opens immediately; select **Add memory anchor** to add your first concept. Palaces and notes save privately to your account. Wait for **Saved to your account** before closing the app. Names must be unique, with a limit of 48 characters and 50 total palaces per account.
 
 | Action                      | Control                                                             |
 | --------------------------- | ------------------------------------------------------------------- |
@@ -74,7 +74,9 @@ Mastery is self-reported, not an automatically graded score or a spaced-repetiti
 | 3D          | Three.js, React Three Fiber 9, Drei                                            |
 | Effects     | React Three Postprocessing: Bloom, Vignette, ChromaticAberration               |
 | Motion      | GSAP camera transitions, frame-based artifact animation, CSS panel transitions |
-| State       | Zustand 5 with validated local persistence                                     |
+| State       | Zustand 5, account isolation and validated cloud persistence                   |
+| Backend     | Firebase Authentication and Cloud Firestore with per-user security rules       |
+| Install     | PWA manifest, install wizard, icons and public offline fallback                |
 | Notes       | React Markdown and remark-gfm                                                  |
 | Fonts       | Locally bundled DM Sans and Space Grotesk                                      |
 | Checks      | ESLint 9, TypeScript, Vitest 4, Prettier 3                                     |
@@ -129,7 +131,7 @@ neuroquest/
 
 ### Architecture
 
-`NeuroQuest` is the client workspace, mounted by the App Router page. It dynamically imports `Scene` with server rendering disabled so WebGL is initialized only in the browser. Forms keep unsaved inputs in component state. Components subscribe to individual Zustand values or actions so typing into a note form does not update the canvas store subscriptions.
+`AccountGate` initializes Firebase in the browser, observes the login session, and loads the signed-in UID's workspace before mounting `NeuroQuest`. The workspace dynamically imports `Scene` with server rendering disabled. Forms keep unsaved inputs in component state. Selective Zustand subscriptions keep form inputs and cloud-status changes from rebuilding the scene.
 
 `usePalaceStore` owns anchors, room and mode selection, camera targets, recall ratings, and display preferences. Its actions validate additions and edits, reject cross-room selections, and clear stale focus and session state after changes. `createPalaceStore` accepts a storage adapter for isolated tests.
 
@@ -143,11 +145,15 @@ The HUD exposes scene controls, progress, room navigation, and a map. Decorative
 
 ## Persistence and data boundaries
 
-Data is saved in this browser's `localStorage` under **`neuroquest-palace`**, storage schema **version 2**. Version 1 data migrates automatically, preserving existing notes and review progress. Hydration runs after client mount. Custom rooms are validated before their anchors; validation checks names, icons, coordinates, colors, IDs, duplicates, and room references. Invalid entries are discarded; wholly invalid nonempty anchor collections fall back to the examples. Intentional empty collections and newly created empty palaces are preserved.
+Data is saved to **Cloud Firestore** under `users/{uid}/workspace`, with separate documents for anchors and rooms. `workspace-cloud.ts` validates loaded state and performs atomic, revision-checked saves. `SaveQueue` debounces and serializes updates; only changed documents are written. A stale browser session cannot silently overwrite newer data. Saved work loads on login or refresh; this is not live collaborative editing.
 
-Persisted fields include rooms, anchors, their retention status, review counts and latest review timestamps, active room, study mode, ambient sound preference, and effects preference. Individual historical ratings are not stored. Open panels, selected anchors, camera position, and in-progress recall-session ratings are transient. Disabled or full storage does not prevent the current in-memory study session.
+Persisted fields include rooms, anchors, retention status, review counts and timestamps, active room, study mode, sound and effects preferences. Individual historical ratings are not stored. Panels, selection, camera and in-progress recall-session ratings are transient and cleared on account changes. Unsaved edits remain in the open tab after save failures; the UI offers retry and export and requests an unload warning when supported.
 
-This version has **no backend, authentication, accounts, or cloud sync**. Data is specific to the browser and origin. Clearing site data removes saved notes. **Export all palaces** downloads a JSON snapshot of rooms, anchors, and review data; an import interface is not included.
+Firebase Auth handles usernames through deterministic internal email aliases and manages passwords. Students provide only a username and password. Username-only accounts cannot receive password-reset emails. The account panel supports **Save & sign out**, exporting notes, installation, and an explicit import of older anonymous device notes. Old `neuroquest-palace` localStorage data is preserved. Signed-in notes are never written to that shared key or a persistent Firestore cache.
+
+**Install NeuroQuest** opens the PWA guide. Supported browsers install the published HTTPS site; Safari users get home-screen instructions. A connection is required for login and cloud notes. The production-only service worker caches a generic offline page, never private content. See [FIREBASE_SETUP.md](./FIREBASE_SETUP.md) for deployment and platform details.
+
+New account/install files include `src/components/account/`, `src/components/pwa/InstallWizard.tsx`, `src/app/manifest.ts`, `src/lib/firebase.ts`, `src/lib/account.ts`, `src/lib/workspace-cloud.ts`, `src/lib/save-queue.ts`, `src/store/useAccountStore.ts`, `public/sw.js`, `public/offline.html`, `public/icons/`, `firestore.rules`, `storage.rules`, `firebase.json`, and `.env.example`.
 
 ## Mobile, motion, and fallback behavior
 
@@ -169,7 +175,7 @@ npm run build
 
 Run `npm run format` to apply Prettier formatting to the source, tests, configuration files, and this README.
 
-The 19 store tests cover rating behavior, duplicate recall prevention, room transitions, camera resets, anchor creation/editing/deletion, coordinate bounds, persistence, migration, malformed JSON, duplicate IDs, unsafe persisted keys, custom palace creation and validation, custom-room anchors, and preservation of older data. These are state-level tests; they do not substitute for browser or graphics checks.
+Unit tests cover study operations, validation, legacy persistence, usernames, account cleanup, document changes, serialized saves and retries. `npm run test:rules` adds isolated Firebase emulator checks for registration, login, per-user access rules and concurrent-save protection. See the setup guide for Java requirements. These tests do not substitute for browser or graphics checks.
 
 Use this manual smoke-test matrix when changing the interface or scene:
 

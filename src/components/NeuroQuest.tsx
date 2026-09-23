@@ -39,6 +39,7 @@ import AnchorDrawer from "./ui/AnchorDrawer";
 import AddAnchorModal from "./ui/AddAnchorModal";
 import AddRoomModal from "./ui/AddRoomModal";
 import RoomIcon from "./ui/RoomIcon";
+import { AccountButton, SyncStatus } from "./account/AccountControls";
 
 const Scene = dynamic(() => import("./three/Scene"), {
   ssr: false,
@@ -439,8 +440,8 @@ function SettingsDialog({ onClose }: { onClose: () => void }) {
         <span>
           <strong>Your knowledge belongs to you.</strong>
           <small>
-            Notes and progress are saved in this browser. Download a copy to
-            keep them safe.
+            Notes and progress are saved to your account. Download an extra copy
+            whenever you like.
           </small>
         </span>
         <button className="secondary-button" onClick={exportPalace}>
@@ -661,7 +662,6 @@ export default function NeuroQuest() {
           ? "The Time Gallery"
           : (room?.name ?? "Your Memory Palace");
   useEffect(() => {
-    void usePalaceStore.persist.rehydrate();
     const keyHandler = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
@@ -742,9 +742,7 @@ export default function NeuroQuest() {
             </strong>
           </div>
           <div className="topbar-actions">
-            <span className="saved-indicator">
-              <span /> Saved on this device
-            </span>
+            <SyncStatus />
             <button
               className="topbar-search"
               aria-label="Search anchors"
@@ -754,13 +752,7 @@ export default function NeuroQuest() {
               <kbd>⌘ K</kbd>
             </button>
             <span className="topbar-divider" />
-            <button
-              className="user-avatar"
-              aria-label="Workspace settings"
-              onClick={() => setDialog("settings")}
-            >
-              NQ
-            </button>
+            <AccountButton />
           </div>
         </header>
         <main id="main-content" className="main-content">

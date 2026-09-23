@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function owner(uid) { return request.auth != null && request.auth.uid == uid; }
+    function validId(id) { return id is string && id.matches('^[a-zA-Z0-9][a-zA-Z0-9_-]{0,199}$'); }
+    function color(value) { return value is string && value.matches('^#[a-fA-F0-9]{6}$'); }
+    function revisionAdvanced(uid) {
+      let path = /databases/$(database)/documents/users/$(uid)/workspace/meta;
+      return getAfter(path).data.revision == (exists(path) ? get(path).data.revision + 1 : 1);
+    }
+    function validMeta(d) {
+      return d.keys().hasOnly(['schema', 'revision']) && d.schema == 1
+        && d.revision is int && d.revision > 0;
+    }
+    function validRoom(d, id) {
+      return d.keys().hasOnly(['id', 'name', 'subtitle', 'color', 'icon'])
+        && validId(d.id) && id == 'room_' + d.id
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 48
+        && d.subtitle is string && d.subtitle.size() <= 120 && color(d.color)
+        && d.icon in ['cpu', 'heart', 'landmark', 'book', 'flask', 'globe'];
+    }
+    function validAnchor(d, id) {
+      return d.keys().hasOnly(['id', 'roomId', 'title', 'category', 'content', 'color', 'shape', 'position', 'status', 'reviewCount', 'lastReviewedAt'])
+        && validId(d.id) && id == 'anchor_' + d.id && validId(d.roomId)
+        && d.title is string && d.title.size() > 0 && d.title.size() <= 100
+        && d.category is string && d.category.size() <= 60
+        && d.content is string && d.content.size() <= 30000 && color(d.color)
+        && d.shape in ['crystal', 'torus', 'cube', 'sphere', 'pyramid', 'knot']
+        && d.position is list && d.position.size() == 3
+        && d.position[0] is number && d.position[0] >= -6 && d.position[0] <= 6
+        && d.position[1] is number && d.position[1] >= 0 && d.position[1] <= 3
+        && d.position[2] is number && d.position[2] >= -6 && d.position[2] <= 6
+        && d.status in ['new', 'learning', 'mastered']
+        && d.reviewCount is int && d.reviewCount >= 0 && d.reviewCount <= 1000000
+        && (d.lastReviewedAt == null || (d.lastReviewedAt is string && d.lastReviewedAt.size() <= 40));
+    }
+    function validPreferences(d) {
+      return d.keys().hasOnly(['activeRoomId', 'mode', 'soundEnabled', 'effectsEnabled'])
+        && validId(d.activeRoomId) && d.mode in ['explore', 'recall']
+        && d.soundEnabled is bool && d.effectsEnabled is bool;
+    }
+    match /users/{uid}/workspace/{id} {
+      allow read: if owner(uid);
+      allow create, update: if owner(uid) && revisionAdvanced(uid) && (
+        (id == 'meta' && validMeta(request.resource.data)) ||
+        (id == 'preferences' && validPreferences(request.resource.data)) ||
+        (id.matches('room_.*') && validRoom(request.resource.data, id)) ||
+        (id.matches('anchor_.*') && validAnchor(request.resource.data, id))
+      );
+      allow delete: if owner(uid) && revisionAdvanced(uid) && id.matches('anchor_.*|room_.*');
+    }
+  }
+}
