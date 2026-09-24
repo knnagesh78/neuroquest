@@ -1,6 +1,18 @@
 # NeuroQuest accounts, cloud saves and installation
 
-The code is connected to the supplied **neuroquest-c0cf0** Firebase web project. The public web configuration does not grant administrative access. Authentication and Firestore must be enabled and the security rules deployed before real users can register and save notes.
+The code is connected to the supplied **neuroquest-c0cf0** Firebase web project. The public web configuration does not grant administrative access.
+
+## Live setup status — 24 September 2026
+
+- Password account registration is enabled, with an enforced eight-character minimum. Students use the app's username and password form; no Google account or real email address is required.
+- The existing **`(default)`** Firestore database is in **Mumbai (`asia-south1`)**.
+- The project's `firestore.rules` have been published. Live Rules Playground checks allowed an authenticated owner to read their workspace and denied signed-out and different-user reads.
+- The `workspace.content` field has ascending, descending and array indexing disabled, matching `firestore.indexes.json`.
+- A real account workspace containing palace, anchor, preferences and revision documents is present in the database. No production test account was created for this verification.
+- The local app is available when its server is running at [localhost:3000](http://localhost:3000).
+- **Public hosting is not deployed yet.** The local Firebase CLI is signed in to a different Google account that does not list this project. Deployment requires signing the CLI in with the project owner's account; the Firebase Console browser session and CLI session are separate.
+
+The instructions below are retained for maintenance and for setting up another project. Do not create a second database for this project.
 
 ## 1. Enable accounts
 
@@ -20,7 +32,7 @@ The login lasts for the current browser tab session. Closing the tab normally en
 
 1. Select **Build → Firestore Database → Create database**.
 2. Use the **Standard edition**, database ID **`(default)`**, in **production mode**.
-3. Choose a location suitable for your college before creation; this is a project-owner decision because the database location is not freely changeable later.
+3. Choose a location suitable for your college before creation; this is a project-owner decision because the database location is not freely changeable later. This project's existing database already uses the approved Mumbai location.
 4. Publish the complete contents of [firestore.rules](./firestore.rules) in the **Rules** tab, or deploy using the commands below. Do not use public test-mode rules.
 
 Data is organized as:
@@ -64,7 +76,9 @@ npm run build:hosting
 npx firebase deploy --only auth,hosting,firestore --project neuroquest-c0cf0
 ```
 
-Or use `npm run deploy` after logging in. Review the rules first if this Firebase project already serves another app: deploying this rules file denies unrelated Firestore paths. The Hosting URL is printed by Firebase after a successful deployment. Add that domain to Authentication's authorized domains if needed.
+Or use `npm run deploy` after logging in. If the CLI is already signed in to a different Google account, use `npx firebase login:add`, complete the project owner's sign-in, then use `npx firebase login:use OWNER_EMAIL` in this project directory. `npx firebase projects:list` should list `neuroquest-c0cf0` before deploying. Do not remove another project's saved login.
+
+Review the rules first if this Firebase project already serves another app: deploying this rules file denies unrelated Firestore paths. The Hosting URL is printed by Firebase after a successful deployment. Add that domain to Authentication's authorized domains if needed.
 
 For local production preview, use `npm run build` followed by `npm start`. A Hosting build writes `out/`; a normal build prepares the Next.js server. Use the matching command for your hosting approach. `build:hosting` refuses an emulator-enabled environment, and no live deployment was performed automatically.
 
