@@ -1,12 +1,19 @@
 "use client";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import {
+  ArrowRight,
+  BookOpen,
+  Boxes,
+  ChartNoAxesCombined,
+  ChevronDown,
   Cloud,
   Download,
   LoaderCircle,
   LogOut,
   RefreshCw,
   ShieldCheck,
+  Smartphone,
+  UserRound,
   X,
 } from "lucide-react";
 import { accountError } from "@/lib/account";
@@ -96,13 +103,39 @@ export function SyncStatus() {
   );
 }
 
-export function AccountButton() {
+export function AccountButton({
+  onNavigate,
+}: {
+  onNavigate: (page: "palace" | "insights" | "guide" | "profile") => void;
+}) {
   const username = useAccountStore((s) => s.username);
   const [open, setOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [legacy, setLegacy] = useState<PersistedPalaceState | null>(null);
   const session = useSession();
+  const menuRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const dismissOutside = (event: PointerEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) setMenuOpen(false);
+    };
+    const dismissEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setMenuOpen(false);
+      triggerRef.current?.focus();
+    };
+    document.addEventListener("pointerdown", dismissOutside);
+    document.addEventListener("keydown", dismissEscape);
+    return () => {
+      document.removeEventListener("pointerdown", dismissOutside);
+      document.removeEventListener("keydown", dismissEscape);
+    };
+  }, [menuOpen]);
+
   const show = () => {
     setMessage("");
     try {
@@ -151,13 +184,168 @@ export function AccountButton() {
   };
   return (
     <>
-      <button
-        className="user-avatar"
-        aria-label={`Account: ${username}`}
-        onClick={show}
-      >
-        {username.slice(0, 2).toUpperCase() || "NQ"}
-      </button>
+      <div className="account-menu" ref={menuRef}>
+        <button
+          ref={triggerRef}
+          className={`account-menu-trigger ${menuOpen ? "is-open" : ""}`}
+          aria-label={`Open account menu for ${username}`}
+          aria-expanded={menuOpen}
+          aria-controls="account-dropdown"
+          onClick={() => setMenuOpen((value) => !value)}
+        >
+          <span className="user-avatar">
+            {username.slice(0, 2).toUpperCase() || "NQ"}
+          </span>
+          <span className="account-menu-trigger-name">@{username}</span>
+          <ChevronDown size={15} className="account-menu-chevron" />
+        </button>
+        {menuOpen && (
+          <div
+            className="account-dropdown"
+            id="account-dropdown"
+            role="group"
+            aria-label="Account and workspace menu"
+          >
+            <div className="account-dropdown-heading">
+              <span className="account-dropdown-avatar">
+                {username.slice(0, 1).toUpperCase() || "N"}
+              </span>
+              <span>
+                <strong>@{username}</strong>
+                <small>YOUR PRIVATE LEARNING SPACE</small>
+              </span>
+              <span className="account-dropdown-cloud" title="Cloud workspace">
+                <Cloud size={15} />
+              </span>
+            </div>
+            <div className="account-dropdown-items">
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onNavigate("profile");
+                }}
+              >
+                <UserRound size={17} />
+                <span>
+                  <strong>My profile</strong>
+                  <small>Progress and account overview</small>
+                </span>
+                <ArrowRight size={15} />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onNavigate("palace");
+                }}
+              >
+                <Boxes size={17} />
+                <span>
+                  <strong>My memory palaces</strong>
+                  <small>Return to your study spaces</small>
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onNavigate("insights");
+                }}
+              >
+                <ChartNoAxesCombined size={17} />
+                <span>
+                  <strong>Learning insights</strong>
+                  <small>See your recall progress</small>
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onNavigate("guide");
+                }}
+              >
+                <BookOpen size={17} />
+                <span>
+                  <strong>The memory method</strong>
+                  <small>How to use a memory palace</small>
+                </span>
+              </button>
+            </div>
+            <div className="account-dropdown-divider" />
+            <div className="account-dropdown-items account-dropdown-tools">
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  show();
+                }}
+              >
+                <ShieldCheck size={17} />
+                <span>
+                  <strong>Account &amp; data</strong>
+                  <small>Privacy and import options</small>
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  exportWorkspace();
+                }}
+              >
+                <Download size={17} />
+                <span>
+                  <strong>Download my notes</strong>
+                  <small>Save a backup to this device</small>
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  window.dispatchEvent(new Event("neuroquest:install"));
+                }}
+              >
+                <Smartphone size={17} />
+                <span>
+                  <strong>Install NeuroQuest</strong>
+                  <small>Keep your palace close at hand</small>
+                </span>
+              </button>
+            </div>
+            <div className="account-dropdown-divider" />
+            {message && (
+              <p className="account-dropdown-error" role="alert">
+                {message}
+              </p>
+            )}
+            <button
+              type="button"
+              className="account-dropdown-signout"
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                setMessage("");
+                try {
+                  await session.logout();
+                } catch (error) {
+                  setMessage(accountError(error));
+                  setBusy(false);
+                }
+              }}
+            >
+              {busy ? (
+                <LoaderCircle className="spin" size={17} />
+              ) : (
+                <LogOut size={17} />
+              )}
+              {busy ? "Saving before sign-out…" : "Save & sign out"}
+            </button>
+          </div>
+        )}
+      </div>
       <Dialog
         isOpen={open}
         onClose={() => {

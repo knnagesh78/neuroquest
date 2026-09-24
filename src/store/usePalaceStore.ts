@@ -225,9 +225,15 @@ function validateAnchor(
 /** Never spread localStorage directly into the store: it must not replace actions or transient UI state. */
 export function validatePersistedState(value: unknown): PersistedPalaceState {
   const source = isRecord(value) ? value : {};
-  // Version 1 did not persist rooms. Always retain the original three palaces
-  // so existing notes and mastery survive migration to custom subject spaces.
-  const rooms = ROOMS.map((room) => ({ ...room }));
+  // Older local workspaces did not persist rooms. Restore their original
+  // subjects when migrating, while an explicitly empty workspace stays empty.
+  const hasPersistedRooms = Array.isArray(source.rooms);
+  const hasLegacyRooms = !hasPersistedRooms && Array.isArray(source.anchors);
+  const useDemoDefaults = !hasPersistedRooms && !Array.isArray(source.anchors);
+  const rooms =
+    hasLegacyRooms || useDemoDefaults
+      ? ROOMS.map((room) => ({ ...room }))
+      : [];
   const roomIds = new Set(rooms.map((room) => room.id));
   const roomNames = new Set(rooms.map((room) => room.name.toLowerCase()));
   if (Array.isArray(source.rooms)) {
@@ -245,7 +251,7 @@ export function validatePersistedState(value: unknown): PersistedPalaceState {
       roomNames.add(room.name.toLowerCase());
     }
   }
-  let anchors = freshAnchors();
+  let anchors: MemoryAnchor[] = useDemoDefaults ? freshAnchors() : [];
   if (Array.isArray(source.anchors)) {
     const seen = new Set<string>();
     const valid = source.anchors.slice(0, 300).flatMap((candidate) => {
@@ -254,8 +260,10 @@ export function validatePersistedState(value: unknown): PersistedPalaceState {
       seen.add(anchor.id);
       return [anchor];
     });
-    // An empty array can be intentional. Fully corrupted nonempty data falls back to the demo.
-    if (source.anchors.length === 0 || valid.length > 0) anchors = valid;
+    // Keep old local notes recoverable if their whole saved anchor list is corrupt.
+    if (valid.length > 0) anchors = valid;
+    else if (source.anchors.length > 0 && hasLegacyRooms)
+      anchors = freshAnchors();
   }
   return {
     rooms,
@@ -264,7 +272,7 @@ export function validatePersistedState(value: unknown): PersistedPalaceState {
       typeof source.activeRoomId === "string" &&
       roomIds.has(source.activeRoomId)
         ? source.activeRoomId
-        : "computer-science",
+        : rooms[0]?.id ?? "computer-science",
     mode: source.mode === "recall" ? "recall" : "explore",
     soundEnabled:
       typeof source.soundEnabled === "boolean" ? source.soundEnabled : false,

@@ -7,13 +7,21 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
   type ReactNode,
 } from "react";
-import { Canvas, useThree } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { RoundedBox } from "@react-three/drei";
-import { ACESFilmicToneMapping, Color, PCFShadowMap } from "three";
+import {
+  ACESFilmicToneMapping,
+  Color,
+  PCFShadowMap,
+  type Group,
+  type MeshBasicMaterial,
+  type PointLight,
+} from "three";
 import { usePalaceStore } from "@/store/usePalaceStore";
 import CameraController from "./CameraController";
 import MemoryAnchor from "./MemoryAnchor";
@@ -282,6 +290,101 @@ function Architecture() {
   );
 }
 
+const roomMotes: Array<{
+  position: [number, number, number];
+  color: string;
+  size: number;
+}> = [
+  { position: [-5.8, 3.45, -2.9], color: "#b69af2", size: 0.09 },
+  { position: [5.85, 2.9, 1.6], color: "#86cbd2", size: 0.075 },
+  { position: [-4.8, 4.1, -5.55], color: "#d1b6fb", size: 0.065 },
+  { position: [4.8, 4.35, -5.6], color: "#9fa5f6", size: 0.085 },
+  { position: [-5.65, 1.15, 4.65], color: "#8ac8b4", size: 0.07 },
+  { position: [5.55, 1.5, 4.8], color: "#c4a4ec", size: 0.09 },
+  { position: [-4.5, 3.2, 2.2], color: "#e3b4ce", size: 0.06 },
+  { position: [4.65, 2.1, -3.8], color: "#a6b8eb", size: 0.07 },
+];
+
+function RoomMotion({
+  reducedMotion,
+  isRecall,
+  compact,
+}: {
+  reducedMotion: boolean;
+  isRecall: boolean;
+  compact: boolean;
+}) {
+  const moteGroup = useRef<Group>(null);
+  const accentLight = useRef<PointLight>(null);
+  const floorRing = useRef<MeshBasicMaterial>(null);
+
+  useFrame(({ clock }) => {
+    if (reducedMotion) return;
+    const time = clock.elapsedTime;
+    if (moteGroup.current) {
+      moteGroup.current.rotation.y = time * 0.032;
+      moteGroup.current.position.y = Math.sin(time * 0.24) * 0.07;
+    }
+    if (accentLight.current) {
+      accentLight.current.position.set(
+        Math.sin(time * 0.16) * 4.2,
+        3.4 + Math.sin(time * 0.29) * 0.45,
+        Math.cos(time * 0.13) * 3.5,
+      );
+      accentLight.current.intensity = isRecall
+        ? 1.7 + Math.sin(time * 0.3) * 0.18
+        : 3.5 + Math.sin(time * 0.3) * 0.55;
+    }
+    if (floorRing.current)
+      floorRing.current.opacity =
+        (isRecall ? 0.11 : 0.2) + Math.sin(time * 0.42) * 0.035;
+  });
+
+  return (
+    <>
+      <group ref={moteGroup}>
+        {roomMotes
+          .slice(0, compact ? 5 : roomMotes.length)
+          .map((mote, index) => (
+            <mesh
+              key={index}
+              position={mote.position}
+              rotation={[0.2, index * 0.7, 0.35]}
+              scale={mote.size}
+            >
+              <octahedronGeometry args={[1, 0]} />
+              <meshBasicMaterial
+                color={mote.color}
+                transparent
+                opacity={isRecall ? 0.5 : 0.74}
+                toneMapped={false}
+              />
+            </mesh>
+          ))}
+      </group>
+      <mesh position={[0, -0.014, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[6.82, 0.012, 6, 144]} />
+        <meshBasicMaterial
+          ref={floorRing}
+          color={isRecall ? "#716394" : "#a98bdb"}
+          transparent
+          opacity={isRecall ? 0.11 : 0.2}
+          depthWrite={false}
+          toneMapped={false}
+        />
+      </mesh>
+      <pointLight
+        ref={accentLight}
+        position={[-4.2, 3.4, 3.5]}
+        color={isRecall ? "#8171bc" : "#a984e4"}
+        intensity={isRecall ? 1.7 : 3.5}
+        distance={17}
+        decay={2}
+      />
+    </>
+  );
+}
+
 function World({
   reducedMotion,
   onContextLost,
@@ -345,6 +448,11 @@ function World({
         decay={2}
       />
       <Architecture />
+      <RoomMotion
+        reducedMotion={reducedMotion}
+        isRecall={isRecall}
+        compact={width < 700}
+      />
       {roomAnchors.map((anchor, index) => (
         <MemoryAnchor
           key={anchor.id}

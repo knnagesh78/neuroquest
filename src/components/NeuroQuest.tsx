@@ -8,13 +8,16 @@ import {
   ArrowUpRight,
   AudioLines,
   Box,
+  Boxes,
   BrainCircuit,
+  BookOpen,
   Check,
   CheckCheck,
   ChevronRight,
   CircleHelp,
   Compass,
   Diamond,
+  Download,
   Expand,
   Focus,
   Keyboard,
@@ -27,11 +30,15 @@ import {
   Settings2,
   Sparkles,
   Target,
+  UserRound,
+  ShieldCheck,
+  Cloud,
   Volume2,
   VolumeX,
   X,
 } from "lucide-react";
 import { usePalaceStore } from "@/store/usePalaceStore";
+import { useAccountStore } from "@/store/useAccountStore";
 import type { MemoryAnchor } from "@/lib/types";
 import Navigation, { type WorkspacePage } from "./ui/Navigation";
 import ModeSwitcher from "./ui/ModeSwitcher";
@@ -39,7 +46,11 @@ import AnchorDrawer from "./ui/AnchorDrawer";
 import AddAnchorModal from "./ui/AddAnchorModal";
 import AddRoomModal from "./ui/AddRoomModal";
 import RoomIcon from "./ui/RoomIcon";
-import { AccountButton, SyncStatus } from "./account/AccountControls";
+import {
+  AccountButton,
+  SyncStatus,
+  exportWorkspace,
+} from "./account/AccountControls";
 
 const Scene = dynamic(() => import("./three/Scene"), {
   ssr: false,
@@ -544,6 +555,149 @@ function LearningInsights() {
   );
 }
 
+function ProfilePage({
+  onNavigate,
+}: {
+  onNavigate: (page: WorkspacePage) => void;
+}) {
+  const username = useAccountStore((state) => state.username);
+  const sync = useAccountStore((state) => state.sync);
+  const rooms = usePalaceStore((state) => state.rooms);
+  const anchors = usePalaceStore((state) => state.anchors);
+  const mastered = anchors.filter(
+    (anchor) => anchor.status === "mastered",
+  ).length;
+  const reviews = anchors.reduce(
+    (total, anchor) => total + anchor.reviewCount,
+    0,
+  );
+
+  return (
+    <div className="profile-view">
+      <header className="profile-page-heading">
+        <div>
+          <span className="section-kicker">
+            <UserRound size={14} /> YOUR LEARNING IDENTITY
+          </span>
+          <h1>My profile</h1>
+          <p className="page-description">
+            A quiet overview of your account and the ideas you’ve made your own.
+          </p>
+        </div>
+        <span className={`profile-save-status profile-save-status--${sync}`}>
+          <Cloud size={15} />
+          {sync === "saved"
+            ? "Saved to your account"
+            : sync === "error"
+              ? "Sync needs attention"
+              : sync === "saving"
+                ? "Saving your ideas"
+                : "Connecting your space"}
+        </span>
+      </header>
+
+      <section className="profile-hero">
+        <div className="profile-hero-glow" aria-hidden="true" />
+        <div className="profile-identity">
+          <span className="profile-avatar">
+            {username.slice(0, 1).toUpperCase() || "N"}
+          </span>
+          <span className="profile-identity-copy">
+            <small>YOUR NEUROQUEST PROFILE</small>
+            <strong>@{username}</strong>
+            <span>Username and password account</span>
+          </span>
+          <span className="profile-private-label">
+            <ShieldCheck size={15} /> Private workspace
+          </span>
+        </div>
+        <div className="profile-metrics">
+          <div className="profile-metric">
+            <span className="profile-metric-icon profile-metric-icon--purple">
+              <Boxes size={17} />
+            </span>
+            <strong>{rooms.length}</strong>
+            <small>Memory palaces</small>
+          </div>
+          <div className="profile-metric">
+            <span className="profile-metric-icon profile-metric-icon--blue">
+              <Box size={17} />
+            </span>
+            <strong>{anchors.length}</strong>
+            <small>Memory anchors</small>
+          </div>
+          <div className="profile-metric">
+            <span className="profile-metric-icon profile-metric-icon--mint">
+              <CheckCheck size={17} />
+            </span>
+            <strong>{mastered}</strong>
+            <small>Anchors mastered</small>
+          </div>
+          <div className="profile-metric">
+            <span className="profile-metric-icon profile-metric-icon--amber">
+              <BrainCircuit size={17} />
+            </span>
+            <strong>{reviews}</strong>
+            <small>Recall repetitions</small>
+          </div>
+        </div>
+      </section>
+
+      <div className="profile-panels">
+        <section className="profile-card profile-card--workspace">
+          <span className="profile-card-icon">
+            <Boxes size={19} />
+          </span>
+          <span className="profile-card-eyebrow">YOUR WORKSPACE</span>
+          <h2>Built around the way you remember.</h2>
+          <p>
+            Your palaces and study progress are saved to this login. Add a space
+            for each subject, then place the concepts you want to revisit.
+          </p>
+          <button
+            className="profile-card-link"
+            onClick={() => onNavigate("palace")}
+          >
+            Open my palaces <ArrowRight size={16} />
+          </button>
+        </section>
+        <section className="profile-card profile-card--privacy">
+          <span className="profile-card-icon">
+            <ShieldCheck size={19} />
+          </span>
+          <span className="profile-card-eyebrow">ACCOUNT &amp; PRIVACY</span>
+          <h2>Your notes stay with your account.</h2>
+          <p>
+            Only this username can open this cloud workspace. Sign in with the
+            same account on another device to continue studying.
+          </p>
+          <span className="profile-privacy-note">
+            <Cloud size={14} /> Cloud sync is{" "}
+            {sync === "saved" ? "up to date" : "active"}.
+          </span>
+        </section>
+        <section className="profile-card profile-card--actions">
+          <span className="profile-card-eyebrow">QUICK ACTIONS</span>
+          <h2>Take your next step.</h2>
+          <button
+            className="profile-action-button"
+            onClick={() => exportWorkspace()}
+          >
+            <Download size={17} /> Download a notes backup
+          </button>
+          <button
+            className="profile-action-button"
+            onClick={() => onNavigate("guide")}
+          >
+            <BookOpen size={17} /> Revisit the memory method
+          </button>
+          <p>More account tools are in the menu beside your name above.</p>
+        </section>
+      </div>
+    </div>
+  );
+}
+
 function ChartIcon() {
   return <Target size={14} />;
 }
@@ -738,7 +892,9 @@ export default function NeuroQuest() {
                 ? "My memory palaces"
                 : page === "insights"
                   ? "Learning insights"
-                  : "The memory method"}
+                  : page === "profile"
+                    ? "My profile"
+                    : "The memory method"}
             </strong>
           </div>
           <div className="topbar-actions">
@@ -752,211 +908,251 @@ export default function NeuroQuest() {
               <kbd>⌘ K</kbd>
             </button>
             <span className="topbar-divider" />
-            <AccountButton />
+            <AccountButton onNavigate={navigateTo} />
           </div>
         </header>
         <main id="main-content" className="main-content">
           {page === "palace" ? (
-            <>
-              <div className="page-heading">
-                <div>
-                  <div className="section-kicker">
-                    <span className="kicker-line" /> A SPACE TO MAKE IT STICK
-                  </div>
-                  <h1>
-                    {roomTitle}
-                    <span className="title-sparkle">✦</span>
-                  </h1>
-                  <p className="page-description">
-                    {activeRoomId.startsWith("room-") && room?.subtitle
-                      ? room.subtitle
-                      : "A home for your ideas. A shortcut to remembering."}
-                  </p>
+            rooms.length === 0 ? (
+              <section className="first-palace-empty">
+                <div className="first-palace-art" aria-hidden="true">
+                  <div className="first-palace-orbit first-palace-orbit--one" />
+                  <div className="first-palace-orbit first-palace-orbit--two" />
+                  <span className="first-palace-core">
+                    <Box size={42} strokeWidth={1.2} />
+                  </span>
+                  <i className="first-palace-star first-palace-star--one">✦</i>
+                  <i className="first-palace-star first-palace-star--two">✧</i>
+                  <i className="first-palace-star first-palace-star--three">
+                    ·
+                  </i>
                 </div>
-                <button
-                  className="primary-button add-main"
-                  onClick={() => setAddOpen(true)}
-                >
-                  <Plus size={18} /> Add memory anchor{" "}
-                  <span className="button-shortcut">＋</span>
-                </button>
-              </div>
-              <div className="palace-toolbar">
-                <ModeSwitcher />
-                <div className="palace-stats">
-                  <span>
-                    <Box size={15} />
-                    <strong>{roomAnchors.length}</strong> anchors
-                  </span>
-                  <span>
-                    <span className="stat-dot" />
-                    <strong>{mastered}</strong> mastered
-                  </span>
-                  <span className="stat-revisit">
-                    <RotateCcw size={14} />
-                    <strong>{roomAnchors.length - mastered}</strong> to revisit
-                  </span>
-                </div>
-              </div>
-              <div className="palace-layout">
-                <section
-                  ref={stageRef}
-                  className={`scene-card ${mode === "recall" ? "recall-scene" : ""}`}
-                  aria-label="Interactive 3D memory palace"
-                >
-                  <div className="scene-surface">
-                    <Scene />
-                  </div>
-                  <div className="scene-top">
-                    <div className="scene-room-label">
-                      <span className="scene-room-icon">
-                        <RoomIcon icon={room?.icon ?? "book"} size={17} />
-                      </span>
-                      <span>
-                        <strong>{room?.name}</strong>
-                        <small>
-                          {mode === "recall"
-                            ? "RECALL CHALLENGE"
-                            : "YOUR PERSONAL MEMORY SPACE"}
-                        </small>
-                      </span>
-                      <ChevronRight size={15} />
-                    </div>
-                    <div className="scene-top-right">
-                      <span className="live-badge">
-                        <i />{" "}
-                        {mode === "recall"
-                          ? `${reviewed}/${roomAnchors.length} recalled`
-                          : "Live space"}
-                      </span>
-                      <button
-                        className="scene-icon-button"
-                        title="Expand palace"
-                        aria-label="Expand palace"
-                        onClick={fullscreen}
-                      >
-                        <Expand size={17} />
-                      </button>
-                    </div>
-                  </div>
-                  {mode === "recall" && (
-                    <div className="recall-banner">
-                      <BrainCircuit size={17} />
-                      <span>
-                        {reviewed === roomAnchors.length && roomAnchors.length
-                          ? "A little stronger than before. Challenge complete!"
-                          : "Trust your memory. Pick an anchor to begin."}
-                      </span>
-                      {reviewed === roomAnchors.length &&
-                        roomAnchors.length > 0 && (
-                          <button
-                            onClick={() => {
-                              setMode("explore");
-                              setMode("recall");
-                            }}
-                          >
-                            Try again <RotateCcw size={13} />
-                          </button>
-                        )}
-                    </div>
-                  )}
-                  <div className="scene-bottom">
-                    <div className="scene-control-group">
-                      <button
-                        className="scene-icon-button"
-                        title="Reset camera"
-                        aria-label="Reset camera"
-                        onClick={resetCamera}
-                      >
-                        <Focus size={17} />
-                      </button>
-                      <span />
-                      <button
-                        className={`scene-icon-button ${sound ? "sound-on" : ""}`}
-                        title={
-                          sound ? "Mute ambient sound" : "Play ambient sound"
-                        }
-                        aria-label={
-                          sound ? "Mute ambient sound" : "Play ambient sound"
-                        }
-                        onClick={toggleSound}
-                      >
-                        {sound ? <Volume2 size={17} /> : <VolumeX size={17} />}
-                      </button>
-                      <button
-                        className="scene-icon-button"
-                        title="Scene settings"
-                        aria-label="Scene settings"
-                        onClick={() => setDialog("settings")}
-                      >
-                        <Settings2 size={17} />
-                      </button>
-                    </div>
-                    <span className="scene-instructions">
-                      <span className="mouse-outline" /> Drag to explore{" "}
-                      <span>·</span> Scroll to zoom
-                    </span>
-                    <button
-                      className="scene-icon-button scene-help"
-                      aria-label="Navigation controls"
-                      onClick={() => setDialog("controls")}
-                    >
-                      <CircleHelp size={18} />
-                    </button>
-                  </div>
-                  <MiniMap anchors={roomAnchors} />
-                  <span className="scene-corner-label">
-                    <span />{" "}
-                    {mode === "recall"
-                      ? "LET YOUR MEMORY LEAD"
-                      : "A LITTLE WORLD OF POSSIBILITY"}
-                  </span>
-                </section>
-                <AnchorList anchors={roomAnchors} />
-              </div>
-              <div className="below-palace">
-                <div className="palace-tip">
-                  <span className="tip-icon">
-                    <Lightbulb size={20} />
-                  </span>
-                  <p>
-                    <strong>A familiar place. An unforgettable idea.</strong>
-                    <span>
-                      Click an object to discover what it holds. The more you
-                      explore, the stronger the connection.
-                    </span>
-                  </p>
-                </div>
-                <button
-                  className="text-button"
-                  onClick={() => {
-                    if (!roomAnchors.length) {
-                      setAddOpen(true);
-                      return;
-                    }
-                    if (mode !== "recall") setMode("recall");
-                    const next =
-                      roomAnchors.find((a) => !sessionRatings[a.id]) ??
-                      roomAnchors[0];
-                    if (next) selectAnchor(next.id);
-                  }}
-                >
-                  {roomAnchors.length
-                    ? "Put your memory to the test"
-                    : "Add your first memory"}{" "}
-                  <ArrowRight size={16} />
-                </button>
-              </div>
-              <div className="page-footer">
-                <span>Built for curious minds.</span>
-                <span>
-                  <span className="footer-key">↖</span> Explore. Connect.
-                  Remember.
+                <span className="first-palace-eyebrow">
+                  YOUR PRIVATE WORKSPACE
                 </span>
-              </div>
-            </>
+                <h1>A blank space for what you want to remember.</h1>
+                <p>
+                  Your account starts with no palaces or sample notes. Create a
+                  palace for a subject, then add only the places and memory
+                  anchors you choose.
+                </p>
+                <button
+                  className="primary-button first-palace-button"
+                  onClick={() => setDialog("create-palace")}
+                >
+                  <Plus size={18} /> Create your first palace
+                </button>
+                <small>Your study space is private to your login.</small>
+              </section>
+            ) : (
+              <>
+                <div className="page-heading">
+                  <div>
+                    <div className="section-kicker">
+                      <span className="kicker-line" /> A SPACE TO MAKE IT STICK
+                    </div>
+                    <h1>
+                      {roomTitle}
+                      <span className="title-sparkle">✦</span>
+                    </h1>
+                    <p className="page-description">
+                      {activeRoomId.startsWith("room-") && room?.subtitle
+                        ? room.subtitle
+                        : "A home for your ideas. A shortcut to remembering."}
+                    </p>
+                  </div>
+                  <button
+                    className="primary-button add-main"
+                    onClick={() => setAddOpen(true)}
+                  >
+                    <Plus size={18} /> Add memory anchor{" "}
+                    <span className="button-shortcut">＋</span>
+                  </button>
+                </div>
+                <div className="palace-toolbar">
+                  <ModeSwitcher />
+                  <div className="palace-stats">
+                    <span>
+                      <Box size={15} />
+                      <strong>{roomAnchors.length}</strong> anchors
+                    </span>
+                    <span>
+                      <span className="stat-dot" />
+                      <strong>{mastered}</strong> mastered
+                    </span>
+                    <span className="stat-revisit">
+                      <RotateCcw size={14} />
+                      <strong>{roomAnchors.length - mastered}</strong> to
+                      revisit
+                    </span>
+                  </div>
+                </div>
+                <div className="palace-layout">
+                  <section
+                    ref={stageRef}
+                    className={`scene-card ${mode === "recall" ? "recall-scene" : ""}`}
+                    aria-label="Interactive 3D memory palace"
+                  >
+                    <div className="scene-surface">
+                      <Scene />
+                    </div>
+                    <div className="scene-top">
+                      <div className="scene-room-label">
+                        <span className="scene-room-icon">
+                          <RoomIcon icon={room?.icon ?? "book"} size={17} />
+                        </span>
+                        <span>
+                          <strong>{room?.name}</strong>
+                          <small>
+                            {mode === "recall"
+                              ? "RECALL CHALLENGE"
+                              : "YOUR PERSONAL MEMORY SPACE"}
+                          </small>
+                        </span>
+                        <ChevronRight size={15} />
+                      </div>
+                      <div className="scene-top-right">
+                        <span className="live-badge">
+                          <i />{" "}
+                          {mode === "recall"
+                            ? `${reviewed}/${roomAnchors.length} recalled`
+                            : "Live space"}
+                        </span>
+                        <button
+                          className="scene-icon-button"
+                          title="Expand palace"
+                          aria-label="Expand palace"
+                          onClick={fullscreen}
+                        >
+                          <Expand size={17} />
+                        </button>
+                      </div>
+                    </div>
+                    {mode === "recall" && (
+                      <div className="recall-banner">
+                        <BrainCircuit size={17} />
+                        <span>
+                          {reviewed === roomAnchors.length && roomAnchors.length
+                            ? "A little stronger than before. Challenge complete!"
+                            : "Trust your memory. Pick an anchor to begin."}
+                        </span>
+                        {reviewed === roomAnchors.length &&
+                          roomAnchors.length > 0 && (
+                            <button
+                              onClick={() => {
+                                setMode("explore");
+                                setMode("recall");
+                              }}
+                            >
+                              Try again <RotateCcw size={13} />
+                            </button>
+                          )}
+                      </div>
+                    )}
+                    <div className="scene-bottom">
+                      <div className="scene-control-group">
+                        <button
+                          className="scene-icon-button"
+                          title="Reset camera"
+                          aria-label="Reset camera"
+                          onClick={resetCamera}
+                        >
+                          <Focus size={17} />
+                        </button>
+                        <span />
+                        <button
+                          className={`scene-icon-button ${sound ? "sound-on" : ""}`}
+                          title={
+                            sound ? "Mute ambient sound" : "Play ambient sound"
+                          }
+                          aria-label={
+                            sound ? "Mute ambient sound" : "Play ambient sound"
+                          }
+                          onClick={toggleSound}
+                        >
+                          {sound ? (
+                            <Volume2 size={17} />
+                          ) : (
+                            <VolumeX size={17} />
+                          )}
+                        </button>
+                        <button
+                          className="scene-icon-button"
+                          title="Scene settings"
+                          aria-label="Scene settings"
+                          onClick={() => setDialog("settings")}
+                        >
+                          <Settings2 size={17} />
+                        </button>
+                      </div>
+                      <span className="scene-instructions">
+                        <span className="mouse-outline" /> Drag to explore{" "}
+                        <span>·</span> Scroll to zoom
+                      </span>
+                      <button
+                        className="scene-icon-button scene-help"
+                        aria-label="Navigation controls"
+                        onClick={() => setDialog("controls")}
+                      >
+                        <CircleHelp size={18} />
+                      </button>
+                    </div>
+                    <MiniMap anchors={roomAnchors} />
+                    <span className="scene-corner-label">
+                      <span />{" "}
+                      {mode === "recall"
+                        ? "LET YOUR MEMORY LEAD"
+                        : "A LITTLE WORLD OF POSSIBILITY"}
+                    </span>
+                  </section>
+                  <AnchorList anchors={roomAnchors} />
+                </div>
+                <div className="below-palace">
+                  <div className="palace-tip">
+                    <span className="tip-icon">
+                      <Lightbulb size={20} />
+                    </span>
+                    <p>
+                      <strong>A familiar place. An unforgettable idea.</strong>
+                      <span>
+                        Click an object to discover what it holds. The more you
+                        explore, the stronger the connection.
+                      </span>
+                    </p>
+                  </div>
+                  <button
+                    className="text-button"
+                    onClick={() => {
+                      if (!roomAnchors.length) {
+                        setAddOpen(true);
+                        return;
+                      }
+                      if (mode !== "recall") setMode("recall");
+                      const next =
+                        roomAnchors.find((a) => !sessionRatings[a.id]) ??
+                        roomAnchors[0];
+                      if (next) selectAnchor(next.id);
+                    }}
+                  >
+                    {roomAnchors.length
+                      ? "Put your memory to the test"
+                      : "Add your first memory"}{" "}
+                    <ArrowRight size={16} />
+                  </button>
+                </div>
+                <div className="page-footer">
+                  <span>Built for curious minds.</span>
+                  <span>
+                    <span className="footer-key">↖</span> Explore. Connect.
+                    Remember.
+                  </span>
+                </div>
+              </>
+            )
           ) : page === "insights" ? (
             <LearningInsights />
+          ) : page === "profile" ? (
+            <ProfilePage onNavigate={navigateTo} />
           ) : (
             <MemoryGuide onStart={() => setPage("palace")} />
           )}

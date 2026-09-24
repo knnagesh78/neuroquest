@@ -74,7 +74,15 @@ export async function loadWorkspace(
       throw new Error(
         "This workspace is incomplete. Contact the project owner before making changes.",
       );
-    return { data: validatePersistedState({}), revision: 0, exists: false };
+    return {
+      data: validatePersistedState({
+        rooms: [],
+        anchors: [],
+        activeRoomId: "computer-science",
+      }),
+      revision: 0,
+      exists: false,
+    };
   }
   if (
     meta.schema !== 1 ||

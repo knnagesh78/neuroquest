@@ -43,14 +43,16 @@ afterAll(async () => {
 });
 
 describe("Firestore ownership and cloud persistence", () => {
-  it("seeds and restores the owner's private workspace", async () => {
+  it("starts each new owner's private workspace empty and restores it", async () => {
     const initial = await loadWorkspace(alice, "alice");
     expect(initial.exists).toBe(false);
+    expect(initial.data.rooms).toEqual([]);
+    expect(initial.data.anchors).toEqual([]);
     const revision = await saveWorkspace(alice, "alice", null, initial.data, 0);
     expect(revision).toBe(1);
     const loaded = await loadWorkspace(alice, "alice");
-    expect(loaded.data.anchors).toHaveLength(initial.data.anchors.length);
-    expect(loaded.data.rooms).toEqual(initial.data.rooms);
+    expect(loaded.data.anchors).toEqual([]);
+    expect(loaded.data.rooms).toEqual([]);
     expect(loaded.revision).toBe(1);
   });
   it("rejects unauthenticated reads and writes", async () => {

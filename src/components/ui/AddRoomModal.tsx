@@ -147,8 +147,8 @@ function RoomForm({ onClose, onCreated }: Omit<Props, "isOpen">) {
           </div>
         </fieldset>
         <p className="new-room-hint">
-          <Sparkles size={15} /> Your palace starts empty. Add your first memory
-          anchor when you’re ready.
+          <Sparkles size={15} /> This palace starts empty. Add only the memory
+          anchors you want to keep here.
         </p>
         {error && (
           <p className="add-error" role="alert">

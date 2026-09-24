@@ -9,6 +9,7 @@ import {
   ArrowUpRight,
   Download,
   Plus,
+  UserRound,
   X,
   Sparkles,
 } from "lucide-react";
@@ -18,7 +19,7 @@ import { useEffect, useRef } from "react";
 import RoomIcon from "./RoomIcon";
 import { useAccountStore } from "@/store/useAccountStore";
 
-export type WorkspacePage = "palace" | "insights" | "guide";
+export type WorkspacePage = "palace" | "insights" | "guide" | "profile";
 type Props = {
   page: WorkspacePage;
   onNavigate: (page: WorkspacePage) => void;
@@ -147,6 +148,12 @@ export default function Navigation({
             onClick={() => go("insights")}
           >
             <ChartNoAxesCombined size={18} /> Learning insights
+          </button>
+          <button
+            className={page === "profile" ? "active" : ""}
+            onClick={() => go("profile")}
+          >
+            <UserRound size={18} /> My profile
           </button>
           <button
             className={page === "guide" ? "active" : ""}
