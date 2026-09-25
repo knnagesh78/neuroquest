@@ -6,8 +6,6 @@ import {
   setPersistence,
   browserSessionPersistence,
 } from "firebase/auth";
-import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
 
 function requiredPublicConfig(name: string, value: string | undefined): string {
   if (!value) {
@@ -57,17 +55,14 @@ function initializeServices() {
     });
   }
   const auth = getAuth(app);
-  const db = getFirestore(app); // Memory-only cache: notes are not persisted to browser disk.
-  const storage = getStorage(app);
   if (process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === "true") {
     connectAuthEmulator(auth, "http://127.0.0.1:9099", {
       disableWarnings: true,
     });
-    connectFirestoreEmulator(db, "127.0.0.1", 8080);
   }
   // A college/shared computer should not remain logged in after the tab is closed.
   const ready = setPersistence(auth, browserSessionPersistence);
-  return { auth, db, storage, ready };
+  return { app, auth, ready };
 }
 
 export function getFirebase() {

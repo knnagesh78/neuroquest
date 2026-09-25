@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
@@ -28,11 +29,6 @@ import {
 } from "lucide-react";
 import { getFirebase } from "@/lib/firebase";
 import { accountError, usernameEmail } from "@/lib/account";
-import {
-  loadWorkspace,
-  saveWorkspace,
-  WorkspaceConflict,
-} from "@/lib/workspace-cloud";
 import { SaveQueue } from "@/lib/save-queue";
 import {
   clearWorkspace,
@@ -42,12 +38,20 @@ import {
   type PersistedPalaceState,
 } from "@/store/usePalaceStore";
 import { useAccountStore } from "@/store/useAccountStore";
-import NeuroQuest from "../NeuroQuest";
 import {
   SessionContext,
   SyncNotice,
   type SessionActions,
 } from "./AccountControls";
+
+const NeuroQuest = dynamic(() => import("../NeuroQuest"), {
+  ssr: false,
+  loading: () => (
+    <StatusPage>
+      <p role="status">Preparing your memory palace…</p>
+    </StatusPage>
+  ),
+});
 
 function StatusPage({ children }: { children: ReactNode }) {
   return (
@@ -317,46 +321,65 @@ function WorkspaceSession({ user }: { user: User }) {
     let unsubscribe = () => {};
     let saver: SaveQueue<PersistedPalaceState> | null = null;
     clearWorkspace();
-    const { db, auth } = getFirebase();
+    const { auth } = getFirebase();
     const timeout = setTimeout(() => {
       if (!disposed)
         setLoadError(
           "The cloud is taking longer than expected. Check your connection and retry.",
         );
     }, 20000);
-    void loadWorkspace(db, user.uid)
-      .then((workspace) => {
-        if (disposed || auth.currentUser?.uid !== user.uid) return;
-        clearTimeout(timeout);
-        replaceWorkspace(workspace.data);
-        saver = new SaveQueue(
-          workspace.data,
-          workspace.exists ? workspace.data : null,
-          workspace.revision,
-          (before, after, revision) => {
-            if (auth.currentUser?.uid !== user.uid)
-              throw new Error("Your session has ended. Sign in again.");
-            return saveWorkspace(db, user.uid, before, after, revision);
-          },
-          (sync, error) => {
-            if (!disposed)
-              useAccountStore.setState({
-                sync,
-                error: error ? accountError(error) : "",
-                conflict: error instanceof WorkspaceConflict,
-              });
-          },
-        );
-        queue.current = saver;
-        useAccountStore.setState({ sync: "saved", error: "", conflict: false });
-        unsubscribe = usePalaceStore.subscribe((state, previous) => {
-          const data = workspaceData(state);
-          if (JSON.stringify(data) !== JSON.stringify(workspaceData(previous)))
-            saver?.update(data);
+    void Promise.all([
+      import("@/lib/firebase-cloud"),
+      import("@/lib/workspace-cloud"),
+    ])
+      .then(([firebaseCloud, workspaceCloud]) => {
+        if (disposed) return;
+        const db = firebaseCloud.getFirebaseDatabase();
+        return workspaceCloud.loadWorkspace(db, user.uid).then((workspace) => {
+          if (disposed || auth.currentUser?.uid !== user.uid) return;
+          clearTimeout(timeout);
+          replaceWorkspace(workspace.data);
+          saver = new SaveQueue(
+            workspace.data,
+            workspace.exists ? workspace.data : null,
+            workspace.revision,
+            (before, after, revision) => {
+              if (auth.currentUser?.uid !== user.uid)
+                throw new Error("Your session has ended. Sign in again.");
+              return workspaceCloud.saveWorkspace(
+                db,
+                user.uid,
+                before,
+                after,
+                revision,
+              );
+            },
+            (sync, error) => {
+              if (!disposed)
+                useAccountStore.setState({
+                  sync,
+                  error: error ? accountError(error) : "",
+                  conflict: error instanceof workspaceCloud.WorkspaceConflict,
+                });
+            },
+          );
+          queue.current = saver;
+          useAccountStore.setState({
+            sync: "saved",
+            error: "",
+            conflict: false,
+          });
+          unsubscribe = usePalaceStore.subscribe((state, previous) => {
+            const data = workspaceData(state);
+            if (
+              JSON.stringify(data) !== JSON.stringify(workspaceData(previous))
+            )
+              saver?.update(data);
+          });
+          setLoadError("");
+          setLoaded(true);
+          if (!workspace.exists) void saver.flush().catch(() => {});
         });
-        setLoadError("");
-        setLoaded(true);
-        if (!workspace.exists) void saver.flush().catch(() => {});
       })
       .catch((error) => {
         if (!disposed) {

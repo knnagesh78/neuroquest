@@ -231,9 +231,7 @@ export function validatePersistedState(value: unknown): PersistedPalaceState {
   const hasLegacyRooms = !hasPersistedRooms && Array.isArray(source.anchors);
   const useDemoDefaults = !hasPersistedRooms && !Array.isArray(source.anchors);
   const rooms =
-    hasLegacyRooms || useDemoDefaults
-      ? ROOMS.map((room) => ({ ...room }))
-      : [];
+    hasLegacyRooms || useDemoDefaults ? ROOMS.map((room) => ({ ...room })) : [];
   const roomIds = new Set(rooms.map((room) => room.id));
   const roomNames = new Set(rooms.map((room) => room.name.toLowerCase()));
   if (Array.isArray(source.rooms)) {
@@ -272,7 +270,7 @@ export function validatePersistedState(value: unknown): PersistedPalaceState {
       typeof source.activeRoomId === "string" &&
       roomIds.has(source.activeRoomId)
         ? source.activeRoomId
-        : rooms[0]?.id ?? "computer-science",
+        : (rooms[0]?.id ?? "computer-science"),
     mode: source.mode === "recall" ? "recall" : "explore",
     soundEnabled:
       typeof source.soundEnabled === "boolean" ? source.soundEnabled : false,

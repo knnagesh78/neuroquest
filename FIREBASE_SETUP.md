@@ -2,7 +2,7 @@
 
 The code is connected to the supplied **neuroquest-c0cf0** Firebase web project. The public web configuration does not grant administrative access.
 
-## Live setup status — 24 September 2026
+## Live setup status — 25 September 2026
 
 - Password account registration is enabled, with an enforced eight-character minimum. Students use the app's username and password form; no Google account or real email address is required.
 - The existing **`(default)`** Firestore database is in **Mumbai (`asia-south1`)**.
@@ -10,7 +10,7 @@ The code is connected to the supplied **neuroquest-c0cf0** Firebase web project.
 - The `workspace.content` field has ascending, descending and array indexing disabled, matching `firestore.indexes.json`.
 - A real account workspace containing palace, anchor, preferences and revision documents is present in the database. No production test account was created for this verification.
 - The local app is available when its server is running at [localhost:3000](http://localhost:3000).
-- The live app is hosted at [neuroquest-navy.vercel.app](https://neuroquest-navy.vercel.app/) and deployed from GitHub through Vercel. The current security cleanup removes the Firebase configuration fallback from source, so Vercel must have the six public Firebase build variables listed in section 4 before deploying this change.
+- The live app is hosted at [neuroquest-navy.vercel.app](https://neuroquest-navy.vercel.app/) and deployed from GitHub through Vercel. The six public Firebase build variables are configured for Vercel Production. The latest redeploy of `main` is ready and the production sign-in page loads. Preview deployments are not configured with Firebase values.
 
 The instructions below are retained for maintenance and for setting up another project. Do not create a second database for this project.
 
@@ -47,7 +47,7 @@ users/{firebase-auth-uid}/workspace/
 
 Rules allow reads and writes only when the signed-in UID matches the owner path. They validate supported fields, lengths, shapes, colors, coordinate bounds and review counts. Each write must advance the workspace revision atomically. Other database paths are denied. A stale device cannot overwrite a newer save: the app offers a download of current notes and a deliberate reload of the cloud version.
 
-Notes use **Cloud Firestore**, not file/object storage. The supplied Firebase Storage bucket is initialized for future extensions, but this release has no attachments or upload control. `storage.rules` denies all file access; deploy it only to a bucket dedicated to this app, after reviewing any existing files and integrations. Cloud Storage may require a billing-plan upgrade; do not enable billing just to use text anchors in Firestore. Consult [Firebase's current Storage requirements](https://firebase.google.com/docs/storage/faqs-storage-changes-announced-sept-2024).
+Notes use **Cloud Firestore**, not file/object storage. The supplied Firebase Storage bucket is configured but not initialized by this release, which has no attachments or upload control. `storage.rules` denies all file access; deploy it only to a bucket dedicated to this app, after reviewing any existing files and integrations. Cloud Storage may require a billing-plan upgrade; do not enable billing just to use text anchors in Firestore. Consult [Firebase's current Storage requirements](https://firebase.google.com/docs/storage/faqs-storage-changes-announced-sept-2024).
 
 ## 3. Run locally
 

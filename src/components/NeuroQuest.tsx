@@ -42,9 +42,6 @@ import { useAccountStore } from "@/store/useAccountStore";
 import type { MemoryAnchor } from "@/lib/types";
 import Navigation, { type WorkspacePage } from "./ui/Navigation";
 import ModeSwitcher from "./ui/ModeSwitcher";
-import AnchorDrawer from "./ui/AnchorDrawer";
-import AddAnchorModal from "./ui/AddAnchorModal";
-import AddRoomModal from "./ui/AddRoomModal";
 import RoomIcon from "./ui/RoomIcon";
 import {
   AccountButton,
@@ -62,6 +59,16 @@ const Scene = dynamic(() => import("./three/Scene"), {
       </span>
     </div>
   ),
+});
+
+const AnchorDrawer = dynamic(() => import("./ui/AnchorDrawer"), {
+  ssr: false,
+});
+const AddAnchorModal = dynamic(() => import("./ui/AddAnchorModal"), {
+  ssr: false,
+});
+const AddRoomModal = dynamic(() => import("./ui/AddRoomModal"), {
+  ssr: false,
 });
 
 function AnchorSymbol({
@@ -794,6 +801,8 @@ export default function NeuroQuest() {
   const mode = usePalaceStore((s) => s.mode);
   const setMode = usePalaceStore((s) => s.setMode);
   const setAddOpen = usePalaceStore((s) => s.setAddOpen);
+  const selectedAnchorId = usePalaceStore((s) => s.selectedAnchorId);
+  const isAddOpen = usePalaceStore((s) => s.isAddOpen);
   const resetCamera = usePalaceStore((s) => s.resetCamera);
   const sound = usePalaceStore((s) => s.soundEnabled);
   const toggleSound = usePalaceStore((s) => s.toggleSound);
@@ -1158,16 +1167,18 @@ export default function NeuroQuest() {
           )}
         </main>
       </div>
-      <AnchorDrawer />
-      <AddAnchorModal />
-      <AddRoomModal
-        isOpen={dialog === "create-palace"}
-        onClose={() => setDialog(null)}
-        onCreated={() => {
-          setDialog(null);
-          navigateTo("palace");
-        }}
-      />
+      {selectedAnchorId && <AnchorDrawer />}
+      {isAddOpen && <AddAnchorModal />}
+      {dialog === "create-palace" && (
+        <AddRoomModal
+          isOpen
+          onClose={() => setDialog(null)}
+          onCreated={() => {
+            setDialog(null);
+            navigateTo("palace");
+          }}
+        />
+      )}
       <AmbientSound />
       {dialog === "search" && (
         <SearchDialog

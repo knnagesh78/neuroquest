@@ -416,7 +416,7 @@ describe("custom memory palaces", () => {
       ],
       activeRoomId: room.id,
     });
-    expect(restored.rooms).toHaveLength(4);
+    expect(restored.rooms).toEqual([room]);
     expect(restored.anchors).toEqual([validAnchor]);
     expect(restored.activeRoomId).toBe(room.id);
   });
