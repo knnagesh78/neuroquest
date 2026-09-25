@@ -41,7 +41,7 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@types/three": "^0.183.1",
-    "eslint": "^9.39.0",
+    "eslint": "^10.11.0",
     "eslint-config-next": "^16.2.0",
     "firebase-tools": "^15.31.0",
     "prettier": "^3.6.2",
