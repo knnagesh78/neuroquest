@@ -10,7 +10,7 @@ The code is connected to the supplied **neuroquest-c0cf0** Firebase web project.
 - The `workspace.content` field has ascending, descending and array indexing disabled, matching `firestore.indexes.json`.
 - A real account workspace containing palace, anchor, preferences and revision documents is present in the database. No production test account was created for this verification.
 - The local app is available when its server is running at [localhost:3000](http://localhost:3000).
-- **Public hosting is not deployed yet.** The local Firebase CLI is signed in to a different Google account that does not list this project. Deployment requires signing the CLI in with the project owner's account; the Firebase Console browser session and CLI session are separate.
+- The live app is hosted at [neuroquest-navy.vercel.app](https://neuroquest-navy.vercel.app/) and deployed from GitHub through Vercel. The current security cleanup removes the Firebase configuration fallback from source, so Vercel must have the six public Firebase build variables listed in section 4 before deploying this change.
 
 The instructions below are retained for maintenance and for setting up another project. Do not create a second database for this project.
 
@@ -60,27 +60,30 @@ npm run dev
 
 Open [localhost:3000](http://localhost:3000). Choose **Create account**, enter a username and password, and create a palace or anchor. Wait for **Saved to your account** before closing the page. To switch users, open the avatar at the top right and choose **Save & sign out**.
 
-The supplied public configuration is already included. For another project, copy `.env.example` to `.env.local`, fill in the `NEXT_PUBLIC_FIREBASE_*` values, and restart the server. Never put a service-account JSON key or admin credential into a `NEXT_PUBLIC_` variable.
+The Firebase browser configuration is loaded from environment variables. This checkout has a local `.env.local` file, which Git ignores. For a fresh checkout, copy `.env.example` to `.env.local`, replace the example values with the web app config from Firebase Console → Project settings → General, then restart the server. These `NEXT_PUBLIC_` values are public identifiers and are included in the browser build; they are not passwords or admin credentials. Never put a service-account JSON key or admin credential in a `NEXT_PUBLIC_` variable.
+
+For Vercel, add the same `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`, `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`, and `NEXT_PUBLIC_FIREBASE_APP_ID` values under Project Settings → Environment Variables, then redeploy. Add `NEXT_PUBLIC_FIREBASE_APPCHECK_SITE_KEY` only after registering this web app with Firebase App Check and configuring its reCAPTCHA v3 provider.
 
 The older anonymous `neuroquest-palace` browser backup is not overwritten or silently uploaded. A signed-in user can open the account panel, inspect/download the old backup, and choose **Import my device notes**. This adds copies, keeps the old backup, and enforces the existing workspace limits. On a shared device, import only notes you own.
 
-## 4. Publish an installable website
+## 4. Deploy the installable website with GitHub and Vercel
 
-Firebase Hosting serves the static Next.js export over HTTPS. This app uses the Firebase client SDK and does not require a paid Node server or Cloud Function for its current features.
+The production app is hosted at [neuroquest-navy.vercel.app](https://neuroquest-navy.vercel.app/). Vercel builds the Next.js app when the connected GitHub branch is updated. Firebase provides Authentication and Cloud Firestore; it does not host the current production frontend.
 
-From a terminal authenticated as the Firebase project owner:
+Before deploying this security cleanup:
 
-```sh
-npx firebase login
-npm run build:hosting
-npx firebase deploy --only auth,hosting,firestore --project neuroquest-c0cf0
-```
+1. In Vercel, open the NeuroQuest project → **Settings → Environment Variables**.
+2. Add the six `NEXT_PUBLIC_FIREBASE_*` values from Firebase Console → **Project settings → General → Your apps → SDK setup and configuration**. Set them for **Production**. Add **Development** if you also want Vercel CLI/local Vercel development; only enable **Preview** if each preview hostname is deliberately allowed in the Firebase API key's website restrictions.
+3. Confirm `neuroquest-navy.vercel.app` and `localhost` are in Firebase Authentication → **Settings → Authorized domains**. Any extra production hostname must be added there and to the API key's website allowlist.
+4. Commit and push the reviewed changes to GitHub. Vercel should build and deploy the connected branch; verify the deployment and test sign-in, creating a palace, saving an anchor, and signing out before closing the tab.
 
-Or use `npm run deploy` after logging in. If the CLI is already signed in to a different Google account, use `npx firebase login:add`, complete the project owner's sign-in, then use `npx firebase login:use OWNER_EMAIL` in this project directory. `npx firebase projects:list` should list `neuroquest-c0cf0` before deploying. Do not remove another project's saved login.
+The six Firebase values are public browser configuration and will be visible in the built JavaScript. They must never include service-account credentials or other server secrets. The optional `NEXT_PUBLIC_FIREBASE_APPCHECK_SITE_KEY` is also public; set it only after registering reCAPTCHA v3 for Firebase App Check. App Check is not active just because the code supports it: register the site key and enable enforcement in Firebase before relying on it.
 
-Review the rules first if this Firebase project already serves another app: deploying this rules file denies unrelated Firestore paths. The Hosting URL is printed by Firebase after a successful deployment. Add that domain to Authentication's authorized domains if needed.
+For local production preview, use `npm run build` followed by `npm start`. A Hosting build writes `out/`; that separate static-export workflow is not used by the Vercel production deployment.
 
-For local production preview, use `npm run build` followed by `npm start`. A Hosting build writes `out/`; a normal build prepares the Next.js server. Use the matching command for your hosting approach. `build:hosting` refuses an emulator-enabled environment, and no live deployment was performed automatically.
+### Optional Firebase Hosting alternative
+
+If you intentionally move hosting to Firebase Hosting, this repository has a static-export configuration. From a terminal authenticated as the Firebase project owner, run `npm run build:hosting` and then `npx firebase deploy --only hosting --project neuroquest-c0cf0`. Add the resulting Hosting domain to Authentication's authorized domains and the API key's website allowlist. Deploy `firestore` rules separately only after reviewing them against every app sharing the project; these rules deny paths outside this app's user workspace. The local Firebase CLI must be authenticated to the project owner first; the Firebase Console browser session and CLI session are separate.
 
 Students open the published HTTPS address and select **Install NeuroQuest** from the sign-in screen, sidebar, or account panel:
 

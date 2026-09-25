@@ -1,4 +1,5 @@
 import { getApp, getApps, initializeApp } from "firebase/app";
+import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 import {
   connectAuthEmulator,
   getAuth,
@@ -8,22 +9,39 @@ import {
 import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
-// Firebase web configuration identifies the project; access is enforced by Auth and Rules.
+function requiredPublicConfig(name: string, value: string | undefined): string {
+  if (!value) {
+    throw new Error(`Missing public Firebase configuration: ${name}`);
+  }
+  return value;
+}
+
+// Firebase browser configuration is public; authorization comes from Auth, Rules, and App Check.
 const firebaseConfig = {
-  apiKey:
-    process.env.NEXT_PUBLIC_FIREBASE_API_KEY ||
-    "AIzaSyA4109bavkXHue_Z8kZYM8MaVqHhPtNAyk",
-  authDomain:
-    process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ||
-    "neuroquest-c0cf0.firebaseapp.com",
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "neuroquest-c0cf0",
-  storageBucket:
-    process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ||
-    "neuroquest-c0cf0.firebasestorage.app",
-  messagingSenderId: "166029371548",
-  appId:
-    process.env.NEXT_PUBLIC_FIREBASE_APP_ID ||
-    "1:166029371548:web:3d0916e7787e993d7a6559",
+  apiKey: requiredPublicConfig(
+    "NEXT_PUBLIC_FIREBASE_API_KEY",
+    process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  ),
+  authDomain: requiredPublicConfig(
+    "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
+    process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  ),
+  projectId: requiredPublicConfig(
+    "NEXT_PUBLIC_FIREBASE_PROJECT_ID",
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  ),
+  storageBucket: requiredPublicConfig(
+    "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET",
+    process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  ),
+  messagingSenderId: requiredPublicConfig(
+    "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
+    process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  ),
+  appId: requiredPublicConfig(
+    "NEXT_PUBLIC_FIREBASE_APP_ID",
+    process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  ),
 };
 
 let services: ReturnType<typeof initializeServices> | undefined;
@@ -31,6 +49,13 @@ function initializeServices() {
   if (typeof window === "undefined")
     throw new Error("Firebase sessions run in the browser.");
   const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  const appCheckSiteKey = process.env.NEXT_PUBLIC_FIREBASE_APPCHECK_SITE_KEY;
+  if (appCheckSiteKey) {
+    initializeAppCheck(app, {
+      provider: new ReCaptchaV3Provider(appCheckSiteKey),
+      isTokenAutoRefreshEnabled: true,
+    });
+  }
   const auth = getAuth(app);
   const db = getFirestore(app); // Memory-only cache: notes are not persisted to browser disk.
   const storage = getStorage(app);
