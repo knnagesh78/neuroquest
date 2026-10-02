@@ -19,6 +19,10 @@ import {
 import type { MemoryAnchor } from "@/lib/types";
 import { usePalaceStore } from "@/store/usePalaceStore";
 import Dialog from "./Dialog";
+import {
+  getAnchorDisplayColor,
+  getAnchorDisplayColors,
+} from "@/lib/anchor-color";
 
 type Rating = "easy" | "hard" | "failed";
 
@@ -73,6 +77,10 @@ function AnchorDetails({
   const rated = reviewedIds.has(anchor.id);
   const visible = !recall || revealed || rated;
   const roomAnchors = anchors.filter((item) => item.roomId === anchor.roomId);
+  const displayColor =
+    getAnchorDisplayColors(roomAnchors)[
+      roomAnchors.findIndex((item) => item.id === anchor.id)
+    ] ?? getAnchorDisplayColor(anchor.color);
   const nextAnchor = roomAnchors.find(
     (item) => item.id !== anchor.id && !reviewedIds.has(item.id),
   );
@@ -101,7 +109,11 @@ function AnchorDetails({
       <div className="drawer-scroll">
         <div
           className="drawer-artifact"
-          style={{ "--anchor-color": anchor.color } as CSSProperties}
+          style={
+            {
+              "--anchor-color": displayColor,
+            } as CSSProperties
+          }
           aria-hidden="true"
         >
           <div

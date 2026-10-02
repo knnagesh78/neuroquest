@@ -5,21 +5,21 @@ export const ROOMS: Room[] = [
     id: "computer-science",
     name: "Computer Science",
     subtitle: "The logic laboratory",
-    color: "#a78bfa",
+    color: "#8fae86",
     icon: "cpu",
   },
   {
     id: "human-anatomy",
     name: "Human Anatomy",
     subtitle: "The living atlas",
-    color: "#5eead4",
+    color: "#759b80",
     icon: "heart",
   },
   {
     id: "world-history",
     name: "World History",
     subtitle: "The archive of ages",
-    color: "#fbbf24",
+    color: "#d6814f",
     icon: "landmark",
   },
 ];
@@ -33,7 +33,7 @@ export const INITIAL_ANCHORS: MemoryAnchor[] = [
     roomId: "computer-science",
     title: "Data Structures",
     category: "FOUNDATIONS",
-    color: "#a78bfa",
+    color: "#a5b8a1",
     position: [-4, 0, -3],
     shape: "crystal",
     status: "mastered",
@@ -50,9 +50,9 @@ A **data structure** organizes values so that the operations your program needs 
 \`\`\`javascript
 const history = [];
 history.push("Room entrance");
-history.push("Purple crystal");
+history.push("Sage crystal");
 const previousStop = history.pop();
-// "Purple crystal" — last in, first out
+// "Sage crystal" — last in, first out
 \`\`\`
 
 > Memory cue: this crystal stores layers of information. Reach directly into an array, lift from a stack, or join a queue.
@@ -67,7 +67,7 @@ Which structure would you choose for an undo button, and why? **A stack**, becau
     roomId: "computer-science",
     title: "Neural Networks",
     category: "MACHINE LEARNING",
-    color: "#60a5fa",
+    color: "#e0b36e",
     position: [0, 0, -4.5],
     shape: "sphere",
     status: "learning",
@@ -90,7 +90,7 @@ def neuron(inputs, weights, bias):
 
 Without nonlinear activation functions, stacked linear layers are still equivalent to a single linear transformation.
 
-> Memory cue: blue sparks pass through this sphere, then travel backward to tune its connections.
+> Memory cue: soft sage sparks pass through this sphere, then travel backward to tune its connections.
 
 ### Test your understanding
 
@@ -102,7 +102,7 @@ What does a learning rate control? The size of each parameter update; too large 
     roomId: "computer-science",
     title: "Algorithms",
     category: "PROBLEM SOLVING",
-    color: "#fbbf24",
+    color: "#b8c2bc",
     position: [4, 0, -2.3],
     shape: "torus",
     status: "mastered",
@@ -129,7 +129,7 @@ function binarySearch(values, target) {
 
 Time: **O(log n)**. Extra space: **O(1)** for this iterative version.
 
-> Memory cue: step through the golden ring and cut your search space in half every time.
+> Memory cue: step through the amber ring and cut your search space in half every time.
 
 ### Test your understanding
 
@@ -141,7 +141,7 @@ Why does binary search fail on an unsorted array? The middle comparison no longe
     roomId: "computer-science",
     title: "Binary Trees",
     category: "DATA STRUCTURES",
-    color: "#2dd4bf",
+    color: "#d6814f",
     position: [-4, 0, 2.5],
     shape: "knot",
     status: "mastered",
@@ -168,7 +168,7 @@ function inorder(node, visit) {
 
 A balanced BST supports search in **O(log n)**. A tree that degenerates into a chain may require **O(n)**.
 
-> Memory cue: follow the teal knot from its left branch, through the center, then along the right branch.
+> Memory cue: follow the sage knot from its left branch, through the center, then along the right branch.
 
 ### Test your understanding
 
@@ -180,7 +180,7 @@ Does every binary tree return sorted values in order? No: that property requires
     roomId: "computer-science",
     title: "System Design",
     category: "ARCHITECTURE",
-    color: "#f472b6",
+    color: "#759b80",
     position: [0, 0, 1.5],
     shape: "cube",
     status: "new",
@@ -206,7 +206,7 @@ Client → Load balancer → Application servers
 
 What must the system do? How much traffic is expected? Which matters most: latency, availability, consistency, or cost? Every architecture makes trade-offs.
 
-> Memory cue: the pink cube is a building. Each face is a service; its edges are their communication paths.
+> Memory cue: the burnt-amber cube is a building. Each face is a service; its edges are their communication paths.
 
 ### Test your understanding
 
@@ -218,7 +218,7 @@ Why put email delivery in a queue? A worker can retry it independently without m
     roomId: "computer-science",
     title: "Big O Notation",
     category: "COMPLEXITY",
-    color: "#c084fc",
+    color: "#b8c2bc",
     position: [4, 0, 3],
     shape: "pyramid",
     status: "learning",
@@ -248,7 +248,7 @@ for (const a of items)
 
 Always specify what case you are analyzing: worst, average, or best. Space complexity counts additional storage as a function of input size.
 
-> Memory cue: climb this violet pyramid. Each level grows wider, just as work grows with the input.
+> Memory cue: climb this sage pyramid. Each level grows wider, just as work grows with the input.
 
 ### Test your understanding
 
@@ -260,7 +260,7 @@ What is O(3n + 12)? **O(n)**, because constant factors and fixed offsets do not 
     roomId: "human-anatomy",
     title: "The Human Heart",
     category: "CARDIOVASCULAR",
-    color: "#fb7185",
+    color: "#e0b36e",
     position: [-4, 0, -2],
     shape: "crystal",
     status: "learning",
@@ -274,7 +274,7 @@ Body → venae cavae → right atrium → tricuspid valve → right ventricle �
 
 Valves support one-way flow. Arteries carry blood **away** from the heart, and veins carry blood **toward** it; these names do not specify oxygen content.
 
-> Memory cue: the red crystal is a four-room house with one-way doors.
+> Memory cue: the amber crystal is a four-room house with one-way doors.
 
 ### Test your understanding
 
@@ -286,7 +286,7 @@ Why is the left ventricular wall thicker? It generates the higher pressure neede
     roomId: "human-anatomy",
     title: "The Neuron",
     category: "NERVOUS SYSTEM",
-    color: "#5eead4",
+    color: "#a5b8a1",
     position: [0, 0, 2],
     shape: "knot",
     status: "new",
@@ -303,7 +303,7 @@ A **neuron** receives, integrates, and transmits information. Dendrites receive 
 
 **Myelin** insulates sections of the axon. Action potentials are regenerated at the nodes of Ranvier, enabling faster saltatory conduction.
 
-> Memory cue: the teal branches receive whispers, then send a single bright message down the trunk.
+> Memory cue: the sage branches receive whispers, then send a single bright message down the trunk.
 
 ### Test your understanding
 
@@ -315,7 +315,7 @@ Does a stronger stimulus produce a larger action potential? Individual action po
     roomId: "human-anatomy",
     title: "Gas Exchange",
     category: "RESPIRATORY",
-    color: "#7dd3fc",
+    color: "#b8c2bc",
     position: [4, 0, -2],
     shape: "sphere",
     status: "mastered",
@@ -333,7 +333,7 @@ Oxygen moves from alveolar air into blood down its partial-pressure gradient. Ca
 
 When the diaphragm contracts, the thoracic cavity expands, pressure drops, and air flows inward. Quiet exhalation is mainly passive.
 
-> Memory cue: the blue sphere is an alveolus—oxygen enters its surrounding river while carbon dioxide leaves.
+> Memory cue: the concrete-grey sphere is an alveolus—oxygen enters its surrounding river while carbon dioxide leaves.
 
 ### Test your understanding
 
@@ -345,7 +345,7 @@ Why are thin alveolar walls useful? They shorten the diffusion distance between 
     roomId: "world-history",
     title: "The Renaissance",
     category: "CULTURE & IDEAS",
-    color: "#fbbf24",
+    color: "#e0b36e",
     position: [-4, 0, -2],
     shape: "pyramid",
     status: "mastered",
@@ -362,7 +362,7 @@ The **Renaissance** was a period of cultural and intellectual change that began 
 
 The Renaissance did not erase medieval traditions; new ideas developed alongside religious life and older institutions.
 
-> Memory cue: the golden pyramid holds a classical manuscript, a painter's brush, and a printing block.
+> Memory cue: the burnt-amber pyramid holds a classical manuscript, a painter's brush, and a printing block.
 
 ### Test your understanding
 
@@ -374,7 +374,7 @@ How could patronage influence art? Patrons supplied resources and often shaped a
     roomId: "world-history",
     title: "Industrial Revolution",
     category: "ECONOMY & SOCIETY",
-    color: "#fb923c",
+    color: "#a5b8a1",
     position: [0, 0, 2],
     shape: "torus",
     status: "learning",
@@ -392,7 +392,7 @@ Textile manufacturing, iron production, and transport were central sectors. Rail
 
 No single invention explains industrialization. Resources, capital, institutions, global trade, and labor all played roles.
 
-> Memory cue: the orange ring is a factory wheel that turns faster as cities rise around it.
+> Memory cue: the sage-grey ring is a factory wheel that turns faster as cities rise around it.
 
 ### Test your understanding
 
@@ -404,7 +404,7 @@ How did the factory system change work? It concentrated workers and machines in 
     roomId: "world-history",
     title: "The Silk Roads",
     category: "TRADE & EXCHANGE",
-    color: "#c084fc",
+    color: "#b8c2bc",
     position: [4, 0, -2],
     shape: "cube",
     status: "new",
@@ -420,7 +420,7 @@ Most merchants traveled only part of the network, exchanging goods at intermedia
 
 Political stability, geography, and demand affected which routes flourished. Maritime trading networks also linked distant societies.
 
-> Memory cue: open the violet traveling chest to find goods, ideas, and stories from many places.
+> Memory cue: open the sage traveling chest to find goods, ideas, and stories from many places.
 
 ### Test your understanding
 

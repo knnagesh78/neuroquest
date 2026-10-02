@@ -119,7 +119,7 @@ describe("palace learning state", () => {
         .updateAnchor("cs-data-structures", { color: "javascript:alert(1)" }),
     ).toThrow();
     expect(store.getState().anchors).toHaveLength(INITIAL_ANCHORS.length);
-    expect(store.getState().anchors[0].color).toBe("#a78bfa");
+    expect(store.getState().anchors[0].color).toBe(INITIAL_ANCHORS[0].color);
   });
 
   it("keeps new, edited, and restored anchors within the architectural slab", () => {

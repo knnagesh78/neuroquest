@@ -6,10 +6,12 @@ import { Edges, Html, useCursor } from "@react-three/drei";
 import { Group, MathUtils, MeshStandardMaterial } from "three";
 import { usePalaceStore } from "@/store/usePalaceStore";
 import type { MemoryAnchor as MemoryAnchorData } from "@/lib/types";
+import { getAnchorDisplayColor } from "@/lib/anchor-color";
 
 interface Props {
   anchor: MemoryAnchorData;
   index: number;
+  displayColor?: string;
   reducedMotion?: boolean;
 }
 
@@ -22,9 +24,9 @@ function Artifact({
     <meshStandardMaterial
       color={color}
       emissive={color}
-      emissiveIntensity={hovered ? 1.4 : 0.5}
-      roughness={0.22}
-      metalness={0.45}
+      emissiveIntensity={hovered ? 1.2 : 0.62}
+      roughness={0.25}
+      metalness={0.14}
     />
   );
   switch (shape) {
@@ -70,9 +72,9 @@ function Artifact({
           <mesh>
             <icosahedronGeometry args={[0.22, 1]} />
             <meshStandardMaterial
-              color="#eeffff"
+              color="#f5faf3"
               emissive={color}
-              emissiveIntensity={2.2}
+              emissiveIntensity={1.25}
             />
           </mesh>
           <mesh position={[0.67, 0, 0]}>
@@ -80,7 +82,7 @@ function Artifact({
             <meshStandardMaterial
               color="#ffffff"
               emissive={color}
-              emissiveIntensity={2.5}
+              emissiveIntensity={1.5}
             />
           </mesh>
         </group>
@@ -91,7 +93,7 @@ function Artifact({
           <mesh castShadow>
             <boxGeometry args={[1.05, 1.05, 1.05]} />
             {material}
-            <Edges color="#dbe7ff" threshold={15} />
+            <Edges color={color} threshold={15} />
           </mesh>
           <mesh scale={1.35}>
             <boxGeometry args={[1.05, 1.05, 1.05]} />
@@ -113,7 +115,7 @@ function Artifact({
             <meshStandardMaterial
               color={color}
               emissive={color}
-              emissiveIntensity={2}
+              emissiveIntensity={1.25}
             />
           </mesh>
         </group>
@@ -124,14 +126,14 @@ function Artifact({
           <mesh castShadow>
             <coneGeometry args={[0.86, 1.38, 4]} />
             {material}
-            <Edges color="#ffe4ba" threshold={15} />
+            <Edges color={color} threshold={15} />
           </mesh>
           <mesh position={[0, -0.84, 0]} rotation={[0, Math.PI / 4, 0]}>
             <cylinderGeometry args={[0.75, 0.75, 0.035, 4]} />
             <meshStandardMaterial
               color={color}
               emissive={color}
-              emissiveIntensity={1.3}
+              emissiveIntensity={0.9}
             />
           </mesh>
         </group>
@@ -146,7 +148,12 @@ function Artifact({
   }
 }
 
-function MemoryAnchor({ anchor, index, reducedMotion = false }: Props) {
+function MemoryAnchor({
+  anchor,
+  index,
+  displayColor,
+  reducedMotion = false,
+}: Props) {
   const float = useRef<Group>(null);
   const pedestalMaterial = useRef<MeshStandardMaterial>(null);
   const [hovered, setHovered] = useState(false);
@@ -156,7 +163,7 @@ function MemoryAnchor({ anchor, index, reducedMotion = false }: Props) {
   );
   const isRecall = usePalaceStore((state) => state.mode === "recall");
   const selectAnchor = usePalaceStore((state) => state.selectAnchor);
-  const color = anchor.color;
+  const color = displayColor ?? getAnchorDisplayColor(anchor.color);
   const highlighted = hovered || isSelected;
 
   useCursor(hovered, "pointer", "grab", canvas);
@@ -179,8 +186,8 @@ function MemoryAnchor({ anchor, index, reducedMotion = false }: Props) {
     }
     if (pedestalMaterial.current) {
       pedestalMaterial.current.emissiveIntensity = MathUtils.damp(
-        pedestalMaterial.current.emissiveIntensity,
-        highlighted ? 0.45 : 0.06,
+      pedestalMaterial.current.emissiveIntensity,
+        highlighted ? 0.72 : 0.16,
         5,
         delta,
       );
@@ -206,17 +213,17 @@ function MemoryAnchor({ anchor, index, reducedMotion = false }: Props) {
         <cylinderGeometry args={[1.12, 1.23, 0.24, 48]} />
         <meshStandardMaterial
           ref={pedestalMaterial}
-          color="#232333"
+          color="#2a2f27"
           roughness={0.46}
           metalness={0.62}
           emissive={color}
-          emissiveIntensity={0.06}
+          emissiveIntensity={0.16}
         />
       </mesh>
       <mesh receiveShadow position={[0, 0.255, 0]}>
         <cylinderGeometry args={[0.92, 1.0, 0.07, 48]} />
         <meshStandardMaterial
-          color="#10111e"
+          color="#161a14"
           metalness={0.6}
           roughness={0.35}
         />
@@ -226,7 +233,16 @@ function MemoryAnchor({ anchor, index, reducedMotion = false }: Props) {
         <meshStandardMaterial
           color={color}
           emissive={color}
-          emissiveIntensity={highlighted ? 3.5 : 1.8}
+          emissiveIntensity={highlighted ? 2.6 : 1.45}
+          toneMapped={false}
+        />
+      </mesh>
+      <mesh position={[0, 0.306, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[1.42, 0.014, 8, 72]} />
+        <meshBasicMaterial
+          color={color}
+          transparent
+          opacity={highlighted ? 0.88 : 0.52}
           toneMapped={false}
         />
       </mesh>
@@ -235,7 +251,8 @@ function MemoryAnchor({ anchor, index, reducedMotion = false }: Props) {
         <meshBasicMaterial
           color={color}
           transparent
-          opacity={highlighted ? 0.42 : 0.18}
+          opacity={highlighted ? 0.58 : 0.3}
+          toneMapped={false}
         />
       </mesh>
       <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -243,7 +260,7 @@ function MemoryAnchor({ anchor, index, reducedMotion = false }: Props) {
         <meshBasicMaterial
           color={color}
           transparent
-          opacity={highlighted ? 0.065 : 0.025}
+          opacity={highlighted ? 0.11 : 0.055}
           depthWrite={false}
         />
       </mesh>
@@ -253,8 +270,8 @@ function MemoryAnchor({ anchor, index, reducedMotion = false }: Props) {
       <pointLight
         position={[0, 1.5, 0]}
         color={color}
-        intensity={highlighted ? 3.5 : 1.5}
-        distance={4}
+        intensity={highlighted ? 1.8 : 0.6}
+        distance={5}
         decay={2}
       />
       <Html
@@ -287,11 +304,11 @@ function MemoryAnchor({ anchor, index, reducedMotion = false }: Props) {
             alignItems: "center",
             gap: 7,
             whiteSpace: "nowrap",
-            border: `1px solid ${highlighted ? color + "88" : "#74758a35"}`,
+            border: `1px solid ${highlighted ? color + "88" : "#7d847a35"}`,
             borderRadius: 6,
             padding: "6px 9px",
-            background: highlighted ? "#181a2bef" : "#10121dde",
-            color: highlighted ? "#f4f1ff" : "#c9c7da",
+            background: highlighted ? "#20261def" : "#151914de",
+            color: highlighted ? "#f7fbf5" : "#cfd5cc",
             boxShadow: highlighted
               ? `0 0 22px ${color}22`
               : "0 5px 15px #00000025",
@@ -316,7 +333,7 @@ function MemoryAnchor({ anchor, index, reducedMotion = false }: Props) {
           {anchor.status === "mastered" && !isRecall && (
             <span
               aria-label="Mastered"
-              style={{ color: "#7edac0", fontSize: 9 }}
+              style={{ color: "#a4c197", fontSize: 9 }}
             >
               ✓
             </span>

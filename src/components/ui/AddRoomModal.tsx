@@ -8,12 +8,12 @@ import Dialog from "./Dialog";
 import { ROOM_ICON_OPTIONS } from "./RoomIcon";
 
 const colors = [
-  { value: "#a78bfa", label: "Lavender" },
-  { value: "#e6af57", label: "Amber" },
-  { value: "#78bba3", label: "Mint" },
-  { value: "#e58eaa", label: "Rose" },
-  { value: "#73a8e3", label: "Sky" },
-  { value: "#a2a5bf", label: "Slate" },
+  { value: "#819178", label: "Sage" },
+  { value: "#61735d", label: "Deep sage" },
+  { value: "#a9b5a1", label: "Soft sage" },
+  { value: "#888c84", label: "Concrete" },
+  { value: "#b5b4aa", label: "Warm concrete" },
+  { value: "#b45e38", label: "Burnt amber" },
 ];
 
 type Props = { isOpen: boolean; onClose: () => void; onCreated: () => void };

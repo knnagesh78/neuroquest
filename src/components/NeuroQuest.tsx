@@ -40,6 +40,10 @@ import {
 import { usePalaceStore } from "@/store/usePalaceStore";
 import { useAccountStore } from "@/store/useAccountStore";
 import type { MemoryAnchor } from "@/lib/types";
+import {
+  getAnchorDisplayColor,
+  getAnchorDisplayColors,
+} from "@/lib/anchor-color";
 import Navigation, { type WorkspacePage } from "./ui/Navigation";
 import ModeSwitcher from "./ui/ModeSwitcher";
 import RoomIcon from "./ui/RoomIcon";
@@ -73,15 +77,21 @@ const AddRoomModal = dynamic(() => import("./ui/AddRoomModal"), {
 
 function AnchorSymbol({
   anchor,
+  displayColor,
   small = false,
 }: {
   anchor: MemoryAnchor;
+  displayColor?: string;
   small?: boolean;
 }) {
   return (
     <span
       className={`anchor-symbol shape-${anchor.shape} ${small ? "small" : ""}`}
-      style={{ "--anchor-color": anchor.color } as React.CSSProperties}
+      style={
+        {
+          "--anchor-color": displayColor ?? getAnchorDisplayColor(anchor.color),
+        } as React.CSSProperties
+      }
     >
       <span />
     </span>
@@ -92,18 +102,19 @@ function MiniMap({ anchors }: { anchors: MemoryAnchor[] }) {
   const selected = usePalaceStore((s) => s.selectedAnchorId);
   const select = usePalaceStore((s) => s.selectAnchor);
   const mode = usePalaceStore((s) => s.mode);
+  const displayColors = useMemo(() => getAnchorDisplayColors(anchors), [anchors]);
   return (
     <div className="mini-map">
       <span>SPATIAL MAP</span>
       <svg viewBox="0 0 130 90" aria-label="Map of anchors in your palace">
         <path
           d="M65 8 118 33 65 79 12 54Z"
-          fill="#b8a0ef0b"
-          stroke="#b8a0ef44"
+          fill="#c1dab50b"
+          stroke="#c1dab544"
         />
         <path
           d="m39 21 53 46M91 21 39 67M13 54h105M65 8v71"
-          stroke="#b8a0ef1f"
+          stroke="#c1dab51f"
           fill="none"
         />
         {anchors.map((a, index) => (
@@ -134,7 +145,7 @@ function MiniMap({ anchors }: { anchors: MemoryAnchor[] }) {
               cx={65 + a.position[0] * 6 + a.position[2] * 3}
               cy={43 + a.position[2] * 3 - a.position[0] * 2}
               r={selected === a.id ? 4.5 : 3}
-              fill={a.color}
+              fill={displayColors[index]}
               stroke={selected === a.id ? "#fff" : "none"}
             />
           </g>
@@ -151,6 +162,7 @@ function AnchorList({ anchors }: { anchors: MemoryAnchor[] }) {
   const select = usePalaceStore((s) => s.selectAnchor);
   const setAddOpen = usePalaceStore((s) => s.setAddOpen);
   const mastered = anchors.filter((a) => a.status === "mastered").length;
+  const displayColors = useMemo(() => getAnchorDisplayColors(anchors), [anchors]);
   return (
     <aside className="anchor-list-panel">
       <div className="panel-eyebrow">
@@ -178,7 +190,7 @@ function AnchorList({ anchors }: { anchors: MemoryAnchor[] }) {
             key={a.id}
             onClick={() => select(a.id)}
           >
-            <AnchorSymbol anchor={a} />
+            <AnchorSymbol anchor={a} displayColor={displayColors[index]} />
             <span className="anchor-row-copy">
               <strong>
                 {mode === "recall"
@@ -620,21 +632,21 @@ function ProfilePage({
         </div>
         <div className="profile-metrics">
           <div className="profile-metric">
-            <span className="profile-metric-icon profile-metric-icon--purple">
+            <span className="profile-metric-icon profile-metric-icon--sage">
               <Boxes size={17} />
             </span>
             <strong>{rooms.length}</strong>
             <small>Memory palaces</small>
           </div>
           <div className="profile-metric">
-            <span className="profile-metric-icon profile-metric-icon--blue">
+            <span className="profile-metric-icon profile-metric-icon--concrete">
               <Box size={17} />
             </span>
             <strong>{anchors.length}</strong>
             <small>Memory anchors</small>
           </div>
           <div className="profile-metric">
-            <span className="profile-metric-icon profile-metric-icon--mint">
+            <span className="profile-metric-icon profile-metric-icon--sage-soft">
               <CheckCheck size={17} />
             </span>
             <strong>{mastered}</strong>

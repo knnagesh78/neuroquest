@@ -96,8 +96,8 @@ describe("install and offline privacy", () => {
       },
     });
     await activated;
-    expect(caches.delete).toHaveBeenCalledExactlyOnceWith(
-      "neuroquest-offline-v0",
-    );
+    expect(caches.delete).toHaveBeenCalledTimes(2);
+    expect(caches.delete).toHaveBeenCalledWith("neuroquest-offline-v0");
+    expect(caches.delete).toHaveBeenCalledWith("neuroquest-offline-v1");
   });
 });

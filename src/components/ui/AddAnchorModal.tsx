@@ -13,17 +13,10 @@ import {
   X,
 } from "lucide-react";
 import type { MemoryAnchor } from "@/lib/types";
+import { anchorPalette } from "@/lib/anchor-color";
 import { usePalaceStore } from "@/store/usePalaceStore";
 import Dialog from "./Dialog";
 
-const colors = [
-  { value: "#9b78ef", label: "Lavender" },
-  { value: "#e6af57", label: "Amber" },
-  { value: "#78bba3", label: "Mint" },
-  { value: "#e58eaa", label: "Rose" },
-  { value: "#73a8e3", label: "Sky" },
-  { value: "#a2a5bf", label: "Slate" },
-];
 const shapes: {
   value: MemoryAnchor["shape"];
   label: string;
@@ -77,7 +70,13 @@ function AddAnchorForm() {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [content, setContent] = useState("");
-  const [color, setColor] = useState(colors[0].value);
+  const [color, setColor] = useState(
+      () =>
+      anchorPalette[
+        anchors.filter((anchor) => anchor.roomId === roomId).length %
+          anchorPalette.length
+      ].value,
+  );
   const [shape, setShape] = useState<MemoryAnchor["shape"]>("crystal");
   const [position, setPosition] = useState(() =>
     openPosition(anchors, roomId).map(String),
@@ -216,7 +215,7 @@ function AddAnchorForm() {
         <fieldset className="add-fieldset">
           <legend>Make it your color</legend>
           <div className="add-colors">
-            {colors.map((swatch) => (
+            {anchorPalette.map((swatch) => (
               <button
                 type="button"
                 className="add-color"
@@ -232,7 +231,7 @@ function AddAnchorForm() {
               </button>
             ))}
             <span>
-              {colors.find((swatch) => swatch.value === color)?.label}
+              {anchorPalette.find((swatch) => swatch.value === color)?.label}
             </span>
           </div>
         </fieldset>

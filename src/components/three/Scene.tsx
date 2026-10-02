@@ -26,6 +26,9 @@ import { usePalaceStore } from "@/store/usePalaceStore";
 import CameraController from "./CameraController";
 import MemoryAnchor from "./MemoryAnchor";
 import PostProcessing from "./PostProcessing";
+import {
+  getAnchorDisplayColors,
+} from "@/lib/anchor-color";
 
 class SceneBoundary extends Component<
   { children: ReactNode; fallback: ReactNode },
@@ -89,7 +92,7 @@ function Pillar({
         castShadow
       >
         <meshStandardMaterial
-          color="#393649"
+          color="#3e443b"
           roughness={0.6}
           metalness={0.24}
         />
@@ -102,7 +105,7 @@ function Pillar({
         castShadow
       >
         <meshStandardMaterial
-          color="#383445"
+          color="#3b4039"
           roughness={0.55}
           metalness={0.3}
         />
@@ -110,14 +113,14 @@ function Pillar({
       <mesh position={[width / 2 + 0.004, height / 2 + 0.17, 0]}>
         <boxGeometry args={[0.016, height * 0.82, 0.045]} />
         <meshStandardMaterial
-          color="#b99afd"
-          emissive="#9c77e9"
+          color="#c3e2b5"
+          emissive="#a6ca96"
           emissiveIntensity={0.9}
         />
       </mesh>
       <mesh position={[0, height + 0.155, 0]}>
         <boxGeometry args={[width + 0.03, 0.024, width + 0.03]} />
-        <meshStandardMaterial color="#827395" metalness={0.6} roughness={0.4} />
+        <meshStandardMaterial color="#818c7c" metalness={0.6} roughness={0.4} />
       </mesh>
     </group>
   );
@@ -136,7 +139,7 @@ function Architecture() {
         castShadow
       >
         <meshStandardMaterial
-          color="#232232"
+          color="#292e26"
           roughness={0.57}
           metalness={0.32}
         />
@@ -148,29 +151,37 @@ function Architecture() {
       >
         <planeGeometry args={[14.72, 13.72]} />
         <meshStandardMaterial
-          color="#292638"
+          color="#2d332b"
           roughness={0.65}
           metalness={0.22}
         />
       </mesh>
       <gridHelper
-        args={[13.6, 20, "#514760", "#393447"]}
+        args={[13.6, 20, "#51594e", "#3c4239"]}
         position={[0, -0.025, 0]}
       />
       <mesh position={[0, -0.27, 6.997]}>
         <boxGeometry args={[14.6, 0.024, 0.016]} />
         <meshStandardMaterial
-          color="#8d73bd"
-          emissive="#8966d6"
+          color="#92a987"
+          emissive="#95b884"
           emissiveIntensity={0.7}
         />
       </mesh>
       <mesh position={[7.497, -0.27, 0]}>
         <boxGeometry args={[0.016, 0.024, 13.6]} />
         <meshStandardMaterial
-          color="#8d73bd"
-          emissive="#8966d6"
+          color="#92a987"
+          emissive="#95b884"
           emissiveIntensity={0.7}
+        />
+      </mesh>
+      <mesh position={[0, -0.27, -6.997]}>
+        <boxGeometry args={[14.6, 0.024, 0.016]} />
+        <meshStandardMaterial
+          color="#c6794d"
+          emissive="#a94f2c"
+          emissiveIntensity={0.45}
         />
       </mesh>
       {[-1, 1].map((side) => (
@@ -178,8 +189,8 @@ function Architecture() {
           <mesh position={[side * 6.9, 0.015, 0]}>
             <boxGeometry args={[0.028, 0.012, 12.8]} />
             <meshStandardMaterial
-              color="#6c5b88"
-              emissive="#645075"
+              color="#6e7c67"
+              emissive="#5f6b5a"
               emissiveIntensity={0.35}
             />
           </mesh>
@@ -202,15 +213,15 @@ function Architecture() {
           >
             <octahedronGeometry args={[0.16]} />
             <meshStandardMaterial
-              color="#c9bdff"
-              emissive="#b69cef"
+              color="#d8edcf"
+              emissive="#bfd9b2"
               emissiveIntensity={1.8}
             />
           </mesh>
           <mesh position={[side * 6.5, 0.19, 4.8]}>
             <boxGeometry args={[0.22, 0.4, 1.65]} />
             <meshStandardMaterial
-              color="#41394e"
+              color="#42483f"
               roughness={0.45}
               metalness={0.5}
             />
@@ -221,7 +232,7 @@ function Architecture() {
         <mesh position={[0, 0.09, 0]} receiveShadow>
           <boxGeometry args={[4.5, 0.18, 1.2]} />
           <meshStandardMaterial
-            color="#42364e"
+            color="#40483c"
             metalness={0.4}
             roughness={0.5}
           />
@@ -229,7 +240,7 @@ function Architecture() {
         <mesh position={[0, 0.24, 0]} receiveShadow>
           <boxGeometry args={[3.9, 0.14, 0.85]} />
           <meshStandardMaterial
-            color="#544362"
+            color="#505a4b"
             metalness={0.4}
             roughness={0.5}
           />
@@ -237,7 +248,7 @@ function Architecture() {
         <mesh position={[0, 2.33, 0]}>
           <torusGeometry args={[2.02, 0.095, 10, 80]} />
           <meshStandardMaterial
-            color="#6e517c"
+            color="#63705d"
             metalness={0.65}
             roughness={0.25}
           />
@@ -245,24 +256,24 @@ function Architecture() {
         <mesh position={[0, 2.33, 0.09]}>
           <torusGeometry args={[1.95, 0.02, 8, 80]} />
           <meshStandardMaterial
-            color="#ba86fa"
-            emissive="#ba86fa"
-            emissiveIntensity={2.5}
+            color="#d18a61"
+            emissive="#b45e38"
+            emissiveIntensity={1.8}
             toneMapped={false}
           />
         </mesh>
         <mesh position={[0, 2.33, 0.12]}>
           <torusGeometry args={[1.68, 0.012, 6, 80, Math.PI * 1.5]} />
           <meshStandardMaterial
-            color="#9671c5"
-            emissive="#a777f2"
+            color="#94ae88"
+            emissive="#aad198"
             emissiveIntensity={0.85}
           />
         </mesh>
         <mesh position={[0, 2.33, 0.1]}>
           <circleGeometry args={[1.91, 64]} />
           <meshBasicMaterial
-            color="#8f4bc6"
+            color="#7ea56c"
             transparent
             opacity={0.045}
             depthWrite={false}
@@ -270,8 +281,8 @@ function Architecture() {
         </mesh>
         <pointLight
           position={[0, 2.2, 1.0]}
-          color="#b479f4"
-          intensity={6}
+          color="#c7794e"
+          intensity={3.4}
           distance={8}
           decay={2}
         />
@@ -283,7 +294,7 @@ function Architecture() {
           rotation={[-Math.PI / 2, 0, 0]}
         >
           <planeGeometry args={[0.38, 0.035]} />
-          <meshBasicMaterial color="#9583ad" transparent opacity={0.8} />
+          <meshBasicMaterial color="#94a28e" transparent opacity={0.8} />
         </mesh>
       ))}
     </group>
@@ -295,14 +306,14 @@ const roomMotes: Array<{
   color: string;
   size: number;
 }> = [
-  { position: [-5.8, 3.45, -2.9], color: "#b69af2", size: 0.09 },
-  { position: [5.85, 2.9, 1.6], color: "#86cbd2", size: 0.075 },
-  { position: [-4.8, 4.1, -5.55], color: "#d1b6fb", size: 0.065 },
-  { position: [4.8, 4.35, -5.6], color: "#9fa5f6", size: 0.085 },
-  { position: [-5.65, 1.15, 4.65], color: "#8ac8b4", size: 0.07 },
-  { position: [5.55, 1.5, 4.8], color: "#c4a4ec", size: 0.09 },
-  { position: [-4.5, 3.2, 2.2], color: "#e3b4ce", size: 0.06 },
-  { position: [4.65, 2.1, -3.8], color: "#a6b8eb", size: 0.07 },
+  { position: [-5.8, 3.45, -2.9], color: "#bfdab2", size: 0.09 },
+  { position: [5.85, 2.9, 1.6], color: "#a6bd9b", size: 0.075 },
+  { position: [-4.8, 4.1, -5.55], color: "#d3e8c9", size: 0.065 },
+  { position: [4.8, 4.35, -5.6], color: "#c3dfb6", size: 0.085 },
+  { position: [-5.65, 1.15, 4.65], color: "#a4b79b", size: 0.07 },
+  { position: [5.55, 1.5, 4.8], color: "#c2d9b7", size: 0.09 },
+  { position: [-4.5, 3.2, 2.2], color: "#c8d6c1", size: 0.06 },
+  { position: [4.65, 2.1, -3.8], color: "#c3d8b9", size: 0.07 },
 ];
 
 function RoomMotion({
@@ -366,7 +377,7 @@ function RoomMotion({
         <torusGeometry args={[6.82, 0.012, 6, 144]} />
         <meshBasicMaterial
           ref={floorRing}
-          color={isRecall ? "#716394" : "#a98bdb"}
+          color={isRecall ? "#778770" : "#acc5a1"}
           transparent
           opacity={isRecall ? 0.11 : 0.2}
           depthWrite={false}
@@ -376,7 +387,7 @@ function RoomMotion({
       <pointLight
         ref={accentLight}
         position={[-4.2, 3.4, 3.5]}
-        color={isRecall ? "#8171bc" : "#a984e4"}
+        color={isRecall ? "#90a885" : "#acca9e"}
         intensity={isRecall ? 1.7 : 3.5}
         distance={17}
         decay={2}
@@ -405,24 +416,28 @@ function World({
     () => anchors.filter((anchor) => anchor.roomId === roomId),
     [anchors, roomId],
   );
+  const displayColors = useMemo(
+    () => getAnchorDisplayColors(roomAnchors),
+    [roomAnchors],
+  );
   const isRecall = mode === "recall";
 
   return (
     <>
-      <color attach="background" args={[isRecall ? "#0b0c13" : "#12121e"]} />
+      <color attach="background" args={[isRecall ? "#0e110d" : "#171b15"]} />
       <fog
         attach="fog"
         args={[
-          isRecall ? "#0b0c13" : "#12121e",
+          isRecall ? "#0e110d" : "#171b15",
           29 * frameScale,
           58 * frameScale,
         ]}
       />
-      <ambientLight intensity={isRecall ? 0.14 : 0.52} color="#ab99c9" />
-      <hemisphereLight args={["#c7b5e7", "#251c3a", isRecall ? 0.28 : 1.25]} />
+      <ambientLight intensity={isRecall ? 0.14 : 0.52} color="#adbca6" />
+      <hemisphereLight args={["#cadac3", "#283224", isRecall ? 0.28 : 1.25]} />
       <directionalLight
         position={[-5, 12, 8]}
-        color="#d7c8f4"
+        color="#dae8d4"
         intensity={isRecall ? 0.35 : 2.2}
         castShadow
         shadow-mapSize={[1024, 1024]}
@@ -437,14 +452,21 @@ function World({
       />
       <directionalLight
         position={[7, 5, -6]}
-        color="#8173dc"
+        color="#9fc08f"
         intensity={isRecall ? 0.3 : 1.3}
       />
       <pointLight
         position={[-5, 5, 1]}
-        color="#a472e1"
-        intensity={isRecall ? 3 : 12}
+        color="#a0c390"
+        intensity={isRecall ? 1.1 : 3.8}
         distance={19}
+        decay={2}
+      />
+      <pointLight
+        position={[5, 3.6, -2]}
+        color="#b45e38"
+        intensity={isRecall ? 0.55 : 2.4}
+        distance={16}
         decay={2}
       />
       <Architecture />
@@ -458,6 +480,7 @@ function World({
           key={anchor.id}
           anchor={anchor}
           index={index}
+          displayColor={displayColors[index]}
           reducedMotion={reducedMotion}
         />
       ))}
@@ -473,6 +496,14 @@ function AccessibleFallback({ onRetry }: { onRetry: () => void }) {
   const roomId = usePalaceStore((state) => state.activeRoomId);
   const mode = usePalaceStore((state) => state.mode);
   const selectAnchor = usePalaceStore((state) => state.selectAnchor);
+  const roomAnchors = useMemo(
+    () => anchors.filter((anchor) => anchor.roomId === roomId),
+    [anchors, roomId],
+  );
+  const displayColors = useMemo(
+    () => getAnchorDisplayColors(roomAnchors),
+    [roomAnchors],
+  );
   return (
     <div
       style={{
@@ -483,8 +514,8 @@ function AccessibleFallback({ onRetry }: { onRetry: () => void }) {
         justifyContent: "center",
         alignItems: "center",
         padding: 24,
-        background: "radial-gradient(ellipse at center, #282036, #10121b 75%)",
-        color: "#e8e4f4",
+        background: "radial-gradient(ellipse at center, #293026, #151813 75%)",
+        color: "#ebf0e8",
         overflow: "auto",
       }}
     >
@@ -492,7 +523,7 @@ function AccessibleFallback({ onRetry }: { onRetry: () => void }) {
         style={{
           fontSize: 11,
           letterSpacing: ".18em",
-          color: "#b8a0df",
+          color: "#baceb1",
           textTransform: "uppercase",
         }}
       >
@@ -505,7 +536,7 @@ function AccessibleFallback({ onRetry }: { onRetry: () => void }) {
         style={{
           maxWidth: 390,
           textAlign: "center",
-          color: "#9a95ad",
+          color: "#9fa79b",
           fontSize: 13,
           lineHeight: 1.6,
           marginBottom: 24,
@@ -522,9 +553,7 @@ function AccessibleFallback({ onRetry }: { onRetry: () => void }) {
           width: "min(100%, 450px)",
         }}
       >
-        {anchors
-          .filter((anchor) => anchor.roomId === roomId)
-          .map((anchor, index) => (
+        {roomAnchors.map((anchor, index) => (
             <button
               key={anchor.id}
               type="button"
@@ -534,7 +563,7 @@ function AccessibleFallback({ onRetry }: { onRetry: () => void }) {
                 border: "1px solid #ffffff14",
                 borderRadius: 10,
                 padding: 18,
-                color: "#e6e1f0",
+                color: "#e7ece5",
                 background: "#ffffff04",
                 cursor: "pointer",
                 font: "inherit",
@@ -548,8 +577,8 @@ function AccessibleFallback({ onRetry }: { onRetry: () => void }) {
                   height: 14,
                   marginBottom: 14,
                   borderRadius: 3,
-                  background: anchor.color,
-                  boxShadow: `0 0 25px ${anchor.color}66`,
+                  background: displayColors[index],
+                  boxShadow: `0 0 20px ${displayColors[index]}44`,
                   transform: "rotate(30deg)",
                 }}
               />
@@ -564,9 +593,9 @@ function AccessibleFallback({ onRetry }: { onRetry: () => void }) {
           marginTop: 22,
           padding: "9px 14px",
           borderRadius: 7,
-          color: "#c7b4ee",
-          border: "1px solid #b59bdd35",
-          background: "#ad8ce310",
+          color: "#ccdec4",
+          border: "1px solid #b6cbad35",
+          background: "#b0cca310",
           font: "inherit",
           fontSize: 12,
           cursor: "pointer",
@@ -612,7 +641,7 @@ function Scene() {
             }}
             fallback={fallback}
             onCreated={({ gl }) => {
-              gl.setClearColor(new Color("#12121e"));
+              gl.setClearColor(new Color("#171b15"));
               gl.domElement.style.cursor = "grab";
             }}
             style={{ touchAction: "none" }}

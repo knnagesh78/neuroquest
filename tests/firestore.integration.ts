@@ -128,7 +128,7 @@ describe("Firestore ownership and cloud persistence", () => {
           id: "room-maths",
           name: "Maths",
           subtitle: "Algebra",
-          color: "#7955d9",
+          color: "#778973",
           icon: "book" as const,
         },
       ],
