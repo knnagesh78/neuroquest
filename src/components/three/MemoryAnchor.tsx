@@ -72,7 +72,7 @@ function Artifact({
           <mesh>
             <icosahedronGeometry args={[0.22, 1]} />
             <meshStandardMaterial
-              color="#f5faf3"
+              color="#fff7eb"
               emissive={color}
               emissiveIntensity={1.25}
             />
@@ -80,7 +80,7 @@ function Artifact({
           <mesh position={[0.67, 0, 0]}>
             <sphereGeometry args={[0.15, 16, 16]} />
             <meshStandardMaterial
-              color="#ffffff"
+              color="#fff7eb"
               emissive={color}
               emissiveIntensity={1.5}
             />
@@ -186,7 +186,7 @@ function MemoryAnchor({
     }
     if (pedestalMaterial.current) {
       pedestalMaterial.current.emissiveIntensity = MathUtils.damp(
-      pedestalMaterial.current.emissiveIntensity,
+        pedestalMaterial.current.emissiveIntensity,
         highlighted ? 0.72 : 0.16,
         5,
         delta,
@@ -213,7 +213,7 @@ function MemoryAnchor({
         <cylinderGeometry args={[1.12, 1.23, 0.24, 48]} />
         <meshStandardMaterial
           ref={pedestalMaterial}
-          color="#2a2f27"
+          color="#38231b"
           roughness={0.46}
           metalness={0.62}
           emissive={color}
@@ -223,7 +223,7 @@ function MemoryAnchor({
       <mesh receiveShadow position={[0, 0.255, 0]}>
         <cylinderGeometry args={[0.92, 1.0, 0.07, 48]} />
         <meshStandardMaterial
-          color="#161a14"
+          color="#241610"
           metalness={0.6}
           roughness={0.35}
         />
@@ -304,11 +304,11 @@ function MemoryAnchor({
             alignItems: "center",
             gap: 7,
             whiteSpace: "nowrap",
-            border: `1px solid ${highlighted ? color + "88" : "#7d847a35"}`,
+            border: `1px solid ${highlighted ? color + "88" : "#94705b35"}`,
             borderRadius: 6,
             padding: "6px 9px",
-            background: highlighted ? "#20261def" : "#151914de",
-            color: highlighted ? "#f7fbf5" : "#cfd5cc",
+            background: highlighted ? "#38231bef" : "#241610de",
+            color: highlighted ? "#fff7eb" : "#ecd9c1",
             boxShadow: highlighted
               ? `0 0 22px ${color}22`
               : "0 5px 15px #00000025",
@@ -333,7 +333,7 @@ function MemoryAnchor({
           {anchor.status === "mastered" && !isRecall && (
             <span
               aria-label="Mastered"
-              style={{ color: "#a4c197", fontSize: 9 }}
+              style={{ color: "#bca08a", fontSize: 9 }}
             >
               ✓
             </span>

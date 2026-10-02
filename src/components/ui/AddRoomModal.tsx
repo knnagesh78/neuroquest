@@ -3,18 +3,10 @@
 import { useState, type CSSProperties } from "react";
 import { Check, Plus, Sparkles, X } from "lucide-react";
 import type { RoomIcon } from "@/lib/types";
+import { roomPalette } from "@/lib/room-color";
 import { usePalaceStore } from "@/store/usePalaceStore";
 import Dialog from "./Dialog";
 import { ROOM_ICON_OPTIONS } from "./RoomIcon";
-
-const colors = [
-  { value: "#819178", label: "Sage" },
-  { value: "#61735d", label: "Deep sage" },
-  { value: "#a9b5a1", label: "Soft sage" },
-  { value: "#888c84", label: "Concrete" },
-  { value: "#b5b4aa", label: "Warm concrete" },
-  { value: "#b45e38", label: "Burnt amber" },
-];
 
 type Props = { isOpen: boolean; onClose: () => void; onCreated: () => void };
 
@@ -22,7 +14,7 @@ function RoomForm({ onClose, onCreated }: Omit<Props, "isOpen">) {
   const addRoom = usePalaceStore((state) => state.addRoom);
   const [name, setName] = useState("");
   const [subtitle, setSubtitle] = useState("");
-  const [color, setColor] = useState(colors[0].value);
+  const [color, setColor] = useState<string>(roomPalette[0].value);
   const [icon, setIcon] = useState<RoomIcon>("book");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -128,7 +120,7 @@ function RoomForm({ onClose, onCreated }: Omit<Props, "isOpen">) {
         <fieldset className="add-fieldset">
           <legend>Choose a palace color</legend>
           <div className="add-colors">
-            {colors.map((swatch) => (
+            {roomPalette.map((swatch) => (
               <button
                 type="button"
                 className="add-color"
@@ -142,7 +134,7 @@ function RoomForm({ onClose, onCreated }: Omit<Props, "isOpen">) {
               </button>
             ))}
             <span>
-              {colors.find((swatch) => swatch.value === color)?.label}
+              {roomPalette.find((swatch) => swatch.value === color)?.label}
             </span>
           </div>
         </fieldset>

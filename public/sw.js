@@ -1,5 +1,5 @@
 /* Only a public offline page is cached. Never cache account pages, auth tokens or Firebase requests. */
-const CACHE = "neuroquest-offline-v2";
+const CACHE = "neuroquest-offline-v3";
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE).then((cache) => cache.add("/offline.html")),

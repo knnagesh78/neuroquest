@@ -40,6 +40,7 @@ import {
 import { usePalaceStore } from "@/store/usePalaceStore";
 import { useAccountStore } from "@/store/useAccountStore";
 import type { MemoryAnchor } from "@/lib/types";
+import { getRoomDisplayColor } from "@/lib/room-color";
 import {
   getAnchorDisplayColor,
   getAnchorDisplayColors,
@@ -102,19 +103,22 @@ function MiniMap({ anchors }: { anchors: MemoryAnchor[] }) {
   const selected = usePalaceStore((s) => s.selectedAnchorId);
   const select = usePalaceStore((s) => s.selectAnchor);
   const mode = usePalaceStore((s) => s.mode);
-  const displayColors = useMemo(() => getAnchorDisplayColors(anchors), [anchors]);
+  const displayColors = useMemo(
+    () => getAnchorDisplayColors(anchors),
+    [anchors],
+  );
   return (
     <div className="mini-map">
       <span>SPATIAL MAP</span>
       <svg viewBox="0 0 130 90" aria-label="Map of anchors in your palace">
         <path
           d="M65 8 118 33 65 79 12 54Z"
-          fill="#c1dab50b"
-          stroke="#c1dab544"
+          fill="#e6c9a20b"
+          stroke="#e6c9a244"
         />
         <path
           d="m39 21 53 46M91 21 39 67M13 54h105M65 8v71"
-          stroke="#c1dab51f"
+          stroke="#e6c9a21f"
           fill="none"
         />
         {anchors.map((a, index) => (
@@ -162,7 +166,10 @@ function AnchorList({ anchors }: { anchors: MemoryAnchor[] }) {
   const select = usePalaceStore((s) => s.selectAnchor);
   const setAddOpen = usePalaceStore((s) => s.setAddOpen);
   const mastered = anchors.filter((a) => a.status === "mastered").length;
-  const displayColors = useMemo(() => getAnchorDisplayColors(anchors), [anchors]);
+  const displayColors = useMemo(
+    () => getAnchorDisplayColors(anchors),
+    [anchors],
+  );
   return (
     <aside className="anchor-list-panel">
       <div className="panel-eyebrow">
@@ -519,13 +526,14 @@ function LearningInsights() {
       <section className="room-insights">
         <h2>A little progress in every palace</h2>
         {rooms.map((room) => {
+          const displayColor = getRoomDisplayColor(room.color);
           const list = anchors.filter((a) => a.roomId === room.id);
           const count = list.filter((a) => a.status === "mastered").length;
           return (
             <div className="room-insight-row" key={room.id}>
               <span
                 className="room-insight-icon"
-                style={{ color: room.color, background: `${room.color}14` }}
+                style={{ color: displayColor, background: `${displayColor}14` }}
               >
                 <Box />
               </span>
@@ -539,7 +547,7 @@ function LearningInsights() {
                 <div
                   style={{
                     width: `${list.length ? (count / list.length) * 100 : 0}%`,
-                    background: room.color,
+                    background: displayColor,
                   }}
                 />
               </div>
@@ -632,28 +640,28 @@ function ProfilePage({
         </div>
         <div className="profile-metrics">
           <div className="profile-metric">
-            <span className="profile-metric-icon profile-metric-icon--sage">
+            <span className="profile-metric-icon profile-metric-icon--chocolate">
               <Boxes size={17} />
             </span>
             <strong>{rooms.length}</strong>
             <small>Memory palaces</small>
           </div>
           <div className="profile-metric">
-            <span className="profile-metric-icon profile-metric-icon--concrete">
+            <span className="profile-metric-icon profile-metric-icon--cream">
               <Box size={17} />
             </span>
             <strong>{anchors.length}</strong>
             <small>Memory anchors</small>
           </div>
           <div className="profile-metric">
-            <span className="profile-metric-icon profile-metric-icon--sage-soft">
+            <span className="profile-metric-icon profile-metric-icon--warm">
               <CheckCheck size={17} />
             </span>
             <strong>{mastered}</strong>
             <small>Anchors mastered</small>
           </div>
           <div className="profile-metric">
-            <span className="profile-metric-icon profile-metric-icon--amber">
+            <span className="profile-metric-icon profile-metric-icon--orange">
               <BrainCircuit size={17} />
             </span>
             <strong>{reviews}</strong>

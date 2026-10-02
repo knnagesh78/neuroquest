@@ -18,6 +18,7 @@ import Link from "next/link";
 import { useEffect, useRef } from "react";
 import RoomIcon from "./RoomIcon";
 import { useAccountStore } from "@/store/useAccountStore";
+import { getRoomDisplayColor } from "@/lib/room-color";
 
 export type WorkspacePage = "palace" | "insights" | "guide" | "profile";
 type Props = {
@@ -169,6 +170,7 @@ export default function Navigation({
         </div>
         <nav className="room-nav" aria-label="Memory palaces">
           {rooms.map((room) => {
+            const displayColor = getRoomDisplayColor(room.color);
             return (
               <button
                 key={room.id}
@@ -182,7 +184,10 @@ export default function Navigation({
               >
                 <span
                   className="room-icon"
-                  style={{ color: room.color, background: `${room.color}16` }}
+                  style={{
+                    color: displayColor,
+                    background: `${displayColor}16`,
+                  }}
                 >
                   <RoomIcon icon={room.icon} />
                 </span>
