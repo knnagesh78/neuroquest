@@ -2,8 +2,10 @@
 
 import { memo, useRef, useState } from "react";
 import { type ThreeEvent, useFrame, useThree } from "@react-three/fiber";
-import { Edges, Html, useCursor } from "@react-three/drei";
-import { Group, MathUtils, MeshStandardMaterial } from "three";
+import { Html, useCursor } from "@react-three/drei";
+import { Group, MathUtils } from "three";
+import AnchorArtifact from "./AnchorArtifact";
+import AnchorPedestal from "./AnchorPedestal";
 import { usePalaceStore } from "@/store/usePalaceStore";
 import type { MemoryAnchor as MemoryAnchorData } from "@/lib/types";
 import { getAnchorDisplayColor } from "@/lib/anchor-color";
@@ -15,139 +17,6 @@ interface Props {
   reducedMotion?: boolean;
 }
 
-function Artifact({
-  shape,
-  color,
-  hovered,
-}: Pick<MemoryAnchorData, "shape" | "color"> & { hovered: boolean }) {
-  const material = (
-    <meshStandardMaterial
-      color={color}
-      emissive={color}
-      emissiveIntensity={hovered ? 1.2 : 0.62}
-      roughness={0.25}
-      metalness={0.14}
-    />
-  );
-  switch (shape) {
-    case "crystal":
-      return (
-        <group rotation={[0.12, 0, -0.1]}>
-          <mesh castShadow scale={[0.64, 1.22, 0.64]}>
-            <octahedronGeometry args={[0.95, 0]} />
-            {material}
-            <Edges color={color} threshold={20} />
-          </mesh>
-          <mesh
-            castShadow
-            position={[0.55, -0.45, 0.08]}
-            rotation={[0, 0, -0.32]}
-            scale={[0.31, 0.62, 0.31]}
-          >
-            <octahedronGeometry args={[0.9, 0]} />
-            {material}
-          </mesh>
-          <mesh
-            castShadow
-            position={[-0.44, -0.45, 0.04]}
-            rotation={[0, 0, 0.3]}
-            scale={[0.29, 0.54, 0.29]}
-          >
-            <octahedronGeometry args={[0.9, 0]} />
-            {material}
-          </mesh>
-        </group>
-      );
-    case "torus":
-      return (
-        <group rotation={[0.25, 0.3, -0.28]}>
-          <mesh castShadow>
-            <torusGeometry args={[0.68, 0.13, 12, 54]} />
-            {material}
-          </mesh>
-          <mesh castShadow rotation={[Math.PI / 2, 0.4, 0]}>
-            <torusGeometry args={[0.68, 0.08, 10, 54]} />
-            {material}
-          </mesh>
-          <mesh>
-            <icosahedronGeometry args={[0.22, 1]} />
-            <meshStandardMaterial
-              color="#fff7eb"
-              emissive={color}
-              emissiveIntensity={1.25}
-            />
-          </mesh>
-          <mesh position={[0.67, 0, 0]}>
-            <sphereGeometry args={[0.15, 16, 16]} />
-            <meshStandardMaterial
-              color="#fff7eb"
-              emissive={color}
-              emissiveIntensity={1.5}
-            />
-          </mesh>
-        </group>
-      );
-    case "cube":
-      return (
-        <group rotation={[0.3, 0.45, 0.24]}>
-          <mesh castShadow>
-            <boxGeometry args={[1.05, 1.05, 1.05]} />
-            {material}
-            <Edges color={color} threshold={15} />
-          </mesh>
-          <mesh scale={1.35}>
-            <boxGeometry args={[1.05, 1.05, 1.05]} />
-            <meshBasicMaterial color={color} transparent opacity={0.045} />
-            <Edges color={color} threshold={15} />
-          </mesh>
-        </group>
-      );
-    case "sphere":
-      return (
-        <group>
-          <mesh castShadow>
-            <icosahedronGeometry args={[0.67, 1]} />
-            {material}
-            <Edges color={color} threshold={15} />
-          </mesh>
-          <mesh rotation={[Math.PI / 2.8, 0.25, 0.3]}>
-            <torusGeometry args={[0.93, 0.035, 8, 64]} />
-            <meshStandardMaterial
-              color={color}
-              emissive={color}
-              emissiveIntensity={1.25}
-            />
-          </mesh>
-        </group>
-      );
-    case "pyramid":
-      return (
-        <group rotation={[0, Math.PI / 4, 0]}>
-          <mesh castShadow>
-            <coneGeometry args={[0.86, 1.38, 4]} />
-            {material}
-            <Edges color={color} threshold={15} />
-          </mesh>
-          <mesh position={[0, -0.84, 0]} rotation={[0, Math.PI / 4, 0]}>
-            <cylinderGeometry args={[0.75, 0.75, 0.035, 4]} />
-            <meshStandardMaterial
-              color={color}
-              emissive={color}
-              emissiveIntensity={0.9}
-            />
-          </mesh>
-        </group>
-      );
-    case "knot":
-      return (
-        <mesh castShadow rotation={[0.4, 0.2, 0]}>
-          <torusKnotGeometry args={[0.48, 0.14, 88, 12, 2, 3]} />
-          {material}
-        </mesh>
-      );
-  }
-}
-
 function MemoryAnchor({
   anchor,
   index,
@@ -155,9 +24,9 @@ function MemoryAnchor({
   reducedMotion = false,
 }: Props) {
   const float = useRef<Group>(null);
-  const pedestalMaterial = useRef<MeshStandardMaterial>(null);
   const [hovered, setHovered] = useState(false);
   const canvas = useThree((state) => state.gl.domElement);
+  const compact = useThree((state) => state.size.width < 500);
   const isSelected = usePalaceStore(
     (state) => state.selectedAnchorId === anchor.id,
   );
@@ -184,14 +53,6 @@ function MemoryAnchor({
       );
       float.current.scale.setScalar(scale);
     }
-    if (pedestalMaterial.current) {
-      pedestalMaterial.current.emissiveIntensity = MathUtils.damp(
-        pedestalMaterial.current.emissiveIntensity,
-        highlighted ? 0.72 : 0.16,
-        5,
-        delta,
-      );
-    }
   });
 
   function select(event: ThreeEvent<MouseEvent>) {
@@ -209,68 +70,24 @@ function MemoryAnchor({
       }}
       onPointerOut={() => setHovered(false)}
     >
-      <mesh receiveShadow castShadow position={[0, 0.12, 0]}>
-        <cylinderGeometry args={[1.12, 1.23, 0.24, 48]} />
-        <meshStandardMaterial
-          ref={pedestalMaterial}
-          color="#38231b"
-          roughness={0.46}
-          metalness={0.62}
-          emissive={color}
-          emissiveIntensity={0.16}
-        />
-      </mesh>
-      <mesh receiveShadow position={[0, 0.255, 0]}>
-        <cylinderGeometry args={[0.92, 1.0, 0.07, 48]} />
-        <meshStandardMaterial
-          color="#241610"
-          metalness={0.6}
-          roughness={0.35}
-        />
-      </mesh>
-      <mesh position={[0, 0.3, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.96, 0.018, 8, 64]} />
-        <meshStandardMaterial
-          color={color}
-          emissive={color}
-          emissiveIntensity={highlighted ? 2.6 : 1.45}
-          toneMapped={false}
-        />
-      </mesh>
-      <mesh position={[0, 0.306, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[1.42, 0.014, 8, 72]} />
-        <meshBasicMaterial
-          color={color}
-          transparent
-          opacity={highlighted ? 0.88 : 0.52}
-          toneMapped={false}
-        />
-      </mesh>
-      <mesh position={[0, 0.308, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.48, 0.51, 48]} />
-        <meshBasicMaterial
-          color={color}
-          transparent
-          opacity={highlighted ? 0.58 : 0.3}
-          toneMapped={false}
-        />
-      </mesh>
-      <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[1.62, 48]} />
-        <meshBasicMaterial
-          color={color}
-          transparent
-          opacity={highlighted ? 0.11 : 0.055}
-          depthWrite={false}
-        />
-      </mesh>
+      <AnchorPedestal
+        color={color}
+        highlighted={highlighted}
+        reducedMotion={reducedMotion}
+        phase={index * 0.8}
+      />
       <group ref={float} position={[0, 1.68, 0]}>
-        <Artifact shape={anchor.shape} color={color} hovered={highlighted} />
+        <AnchorArtifact
+          shape={anchor.shape}
+          color={color}
+          highlighted={highlighted}
+          reducedMotion={reducedMotion}
+        />
       </group>
       <pointLight
         position={[0, 1.5, 0]}
         color={color}
-        intensity={highlighted ? 1.8 : 0.6}
+        intensity={highlighted ? 1.3 : 0.5}
         distance={5}
         decay={2}
       />
@@ -302,21 +119,21 @@ function MemoryAnchor({
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
-            gap: 7,
+            gap: compact ? 5 : 7,
             whiteSpace: "nowrap",
             border: `1px solid ${highlighted ? color + "88" : "#94705b35"}`,
-            borderRadius: 6,
-            padding: "6px 9px",
+            borderRadius: 8,
+            padding: compact ? "5px 7px" : "7px 10px",
             background: highlighted ? "#38231bef" : "#241610de",
             color: highlighted ? "#fff7eb" : "#ecd9c1",
             boxShadow: highlighted
               ? `0 0 22px ${color}22`
               : "0 5px 15px #00000025",
-            fontSize: 10,
+            fontSize: compact ? 10 : 11,
             fontFamily: "inherit",
             fontWeight: 500,
             letterSpacing: ".015em",
-            transition: "border-color .2s, background .2s",
+            transition: "border-color .2s, background .2s, box-shadow .2s",
           }}
         >
           <span
@@ -329,15 +146,29 @@ function MemoryAnchor({
               boxShadow: `0 0 7px ${color}`,
             }}
           />
-          {isRecall ? "???" : anchor.title}
-          {anchor.status === "mastered" && !isRecall && (
-            <span
-              aria-label="Mastered"
-              style={{ color: "#bca08a", fontSize: 9 }}
-            >
-              ✓
-            </span>
-          )}
+          <span
+            style={{
+              maxWidth: compact ? 110 : 180,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {isRecall
+              ? "???"
+              : !compact || highlighted
+                ? anchor.title
+                : String(index + 1).padStart(2, "0")}
+          </span>
+          {anchor.status === "mastered" &&
+            !isRecall &&
+            (!compact || highlighted) && (
+              <span
+                aria-label="Mastered"
+                style={{ color: "#bca08a", fontSize: 9 }}
+              >
+                ✓
+              </span>
+            )}
         </button>
       </Html>
     </group>

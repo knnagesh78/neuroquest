@@ -26,6 +26,8 @@ import { usePalaceStore } from "@/store/usePalaceStore";
 import CameraController from "./CameraController";
 import MemoryAnchor from "./MemoryAnchor";
 import PostProcessing from "./PostProcessing";
+import StudioLighting from "./StudioLighting";
+import PalacePortal from "./PalacePortal";
 import { getAnchorDisplayColors } from "@/lib/anchor-color";
 
 class SceneBoundary extends Component<
@@ -97,19 +99,20 @@ function Pillar({
       </RoundedBox>
       <RoundedBox
         args={[width, height, width]}
-        radius={0.035}
+        radius={0.06}
+        smoothness={2}
         position={[0, height / 2 + 0.14, 0]}
         receiveShadow
         castShadow
       >
         <meshStandardMaterial
-          color="#503326"
-          roughness={0.55}
-          metalness={0.3}
+          color="#49372d"
+          roughness={0.35}
+          metalness={0.5}
         />
       </RoundedBox>
-      <mesh position={[width / 2 + 0.004, height / 2 + 0.17, 0]}>
-        <boxGeometry args={[0.016, height * 0.82, 0.045]} />
+      <mesh position={[0, height / 2 + 0.17, width / 2 + 0.005]}>
+        <boxGeometry args={[0.022, height * 0.78, 0.016]} />
         <meshStandardMaterial
           color="#ecd9c1"
           emissive="#d5bda2"
@@ -124,7 +127,13 @@ function Pillar({
   );
 }
 
-function Architecture() {
+function Architecture({
+  reducedMotion,
+  isRecall,
+}: {
+  reducedMotion: boolean;
+  isRecall: boolean;
+}) {
   return (
     <group>
       {/* Declarative R3F resources are automatically disposed with the scene. */}
@@ -137,9 +146,9 @@ function Architecture() {
         castShadow
       >
         <meshStandardMaterial
-          color="#38231b"
-          roughness={0.57}
-          metalness={0.32}
+          color="#362822"
+          roughness={0.4}
+          metalness={0.45}
         />
       </RoundedBox>
       <mesh
@@ -149,13 +158,13 @@ function Architecture() {
       >
         <planeGeometry args={[14.72, 13.72]} />
         <meshStandardMaterial
-          color="#38231b"
-          roughness={0.65}
-          metalness={0.22}
+          color="#392d28"
+          roughness={0.48}
+          metalness={0.3}
         />
       </mesh>
       <gridHelper
-        args={[13.6, 20, "#503326", "#503326"]}
+        args={[13.6, 20, "#725746", "#59463b"]}
         position={[0, -0.025, 0]}
       />
       <mesh position={[0, -0.27, 6.997]}>
@@ -226,65 +235,7 @@ function Architecture() {
           </mesh>
         </group>
       ))}
-      <group position={[0, 0, -6.2]}>
-        <mesh position={[0, 0.09, 0]} receiveShadow>
-          <boxGeometry args={[4.5, 0.18, 1.2]} />
-          <meshStandardMaterial
-            color="#503326"
-            metalness={0.4}
-            roughness={0.5}
-          />
-        </mesh>
-        <mesh position={[0, 0.24, 0]} receiveShadow>
-          <boxGeometry args={[3.9, 0.14, 0.85]} />
-          <meshStandardMaterial
-            color="#503326"
-            metalness={0.4}
-            roughness={0.5}
-          />
-        </mesh>
-        <mesh position={[0, 2.33, 0]}>
-          <torusGeometry args={[2.02, 0.095, 10, 80]} />
-          <meshStandardMaterial
-            color="#6e4b38"
-            metalness={0.65}
-            roughness={0.25}
-          />
-        </mesh>
-        <mesh position={[0, 2.33, 0.09]}>
-          <torusGeometry args={[1.95, 0.02, 8, 80]} />
-          <meshStandardMaterial
-            color="#c65b2a"
-            emissive="#c65b2a"
-            emissiveIntensity={1.8}
-            toneMapped={false}
-          />
-        </mesh>
-        <mesh position={[0, 2.33, 0.12]}>
-          <torusGeometry args={[1.68, 0.012, 6, 80, Math.PI * 1.5]} />
-          <meshStandardMaterial
-            color="#bca08a"
-            emissive="#d5bda2"
-            emissiveIntensity={0.85}
-          />
-        </mesh>
-        <mesh position={[0, 2.33, 0.1]}>
-          <circleGeometry args={[1.91, 64]} />
-          <meshBasicMaterial
-            color="#94705b"
-            transparent
-            opacity={0.045}
-            depthWrite={false}
-          />
-        </mesh>
-        <pointLight
-          position={[0, 2.2, 1.0]}
-          color="#c65b2a"
-          intensity={3.4}
-          distance={8}
-          decay={2}
-        />
-      </group>
+      <PalacePortal reducedMotion={reducedMotion} isRecall={isRecall} />
       {[-4.8, -2.4, 0, 2.4, 4.8].map((x) => (
         <mesh
           key={x}
@@ -422,21 +373,21 @@ function World({
 
   return (
     <>
-      <color attach="background" args={[isRecall ? "#241610" : "#241610"]} />
+      <color attach="background" args={[isRecall ? "#171310" : "#211916"]} />
       <fog
         attach="fog"
         args={[
-          isRecall ? "#241610" : "#241610",
+          isRecall ? "#171310" : "#211916",
           29 * frameScale,
           58 * frameScale,
         ]}
       />
-      <ambientLight intensity={isRecall ? 0.14 : 0.52} color="#d5bda2" />
-      <hemisphereLight args={["#ecd9c1", "#38231b", isRecall ? 0.28 : 1.25]} />
+      <ambientLight intensity={isRecall ? 0.1 : 0.3} color="#f7ead8" />
+      <hemisphereLight args={["#f5eee8", "#38231b", isRecall ? 0.2 : 0.7]} />
       <directionalLight
         position={[-5, 12, 8]}
-        color="#f7ead8"
-        intensity={isRecall ? 0.35 : 2.2}
+        color="#fff5eb"
+        intensity={isRecall ? 0.3 : 2.3}
         castShadow
         shadow-mapSize={[1024, 1024]}
         shadow-camera-left={-12}
@@ -450,8 +401,8 @@ function World({
       />
       <directionalLight
         position={[7, 5, -6]}
-        color="#bca08a"
-        intensity={isRecall ? 0.3 : 1.3}
+        color="#e4eaff"
+        intensity={isRecall ? 0.22 : 1.6}
       />
       <pointLight
         position={[-5, 5, 1]}
@@ -467,7 +418,8 @@ function World({
         distance={16}
         decay={2}
       />
-      <Architecture />
+      <StudioLighting isRecall={isRecall} />
+      <Architecture reducedMotion={reducedMotion} isRecall={isRecall} />
       <RoomMotion
         reducedMotion={reducedMotion}
         isRecall={isRecall}
@@ -635,11 +587,11 @@ function Scene() {
               alpha: false,
               powerPreference: "high-performance",
               toneMapping: ACESFilmicToneMapping,
-              toneMappingExposure: 1.15,
+              toneMappingExposure: 1.05,
             }}
             fallback={fallback}
             onCreated={({ gl }) => {
-              gl.setClearColor(new Color("#241610"));
+              gl.setClearColor(new Color("#211916"));
               gl.domElement.style.cursor = "grab";
             }}
             style={{ touchAction: "none" }}
