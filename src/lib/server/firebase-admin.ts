@@ -90,6 +90,23 @@ export async function requireAiUser(request: Request) {
   }
 }
 
+/** Check private storage before reserving quota or starting a purchased task. */
+export async function requireAiStorage(uid: string) {
+  try {
+    await getAdmin().bucket.getFiles({
+      prefix: `users/${uid}/ai-anchors/`,
+      maxResults: 1,
+      autoPaginate: false,
+    });
+  } catch {
+    throw new AiError(
+      "STORAGE_UNAVAILABLE",
+      "Private model storage is unavailable. Ask the project owner to check Firebase Storage setup and access, then try again.",
+      503,
+    );
+  }
+}
+
 export function requireSameOrigin(request: Request) {
   const origin = request.headers.get("origin");
   if (

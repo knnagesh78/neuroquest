@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 const mock = vi.hoisted(() => ({
   auth: vi.fn(),
+  storage: vi.fn(),
   prepareImage: vi.fn(),
   keys: vi.fn(),
   create: vi.fn(),
@@ -16,6 +17,7 @@ vi.mock("next/server", () => ({ after: mock.after }));
 vi.mock("@/lib/server/firebase-admin", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   requireAiUser: mock.auth,
+  requireAiStorage: mock.storage,
 }));
 vi.mock("@/lib/server/ai-providers", () => ({
   prepareScanImage: mock.prepareImage,
@@ -70,6 +72,7 @@ beforeEach(() => {
     image: Buffer.from("safe png"),
     thumbnail: Buffer.from("webp"),
   });
+  mock.storage.mockResolvedValue(undefined);
   mock.create.mockResolvedValue({ created: true, job });
   mock.read.mockResolvedValue(job);
   mock.claim.mockResolvedValue(false);
@@ -123,6 +126,18 @@ describe("authenticated generation route", () => {
     expect((await POST(request())).status).toBe(401);
     expect(mock.prepareImage).not.toHaveBeenCalled();
     expect(mock.create).not.toHaveBeenCalled();
+  });
+  it("does not reserve quota or start providers when private storage is unavailable", async () => {
+    mock.storage.mockRejectedValue(
+      new AiError("STORAGE_UNAVAILABLE", "Finish private storage setup", 503),
+    );
+    const response = await POST(request());
+    expect(response.status).toBe(503);
+    expect((await response.json()).code).toBe("STORAGE_UNAVAILABLE");
+    expect(mock.storage).toHaveBeenCalledWith("alice");
+    expect(mock.create).not.toHaveBeenCalled();
+    expect(mock.after).not.toHaveBeenCalled();
+    expect(mock.prepareJob).not.toHaveBeenCalled();
   });
   it("rejects a cross-origin request before verifying credentials", async () => {
     expect(

@@ -36,7 +36,7 @@ Plain static Firebase Hosting cannot run these server routes. `build:hosting` ex
 ## Processing and data flow
 
 1. The browser resizes JPEG/PNG/WebP photos to at most 1536 pixels per side and less than 3 MB. Original files up to 12 MB can be selected. The server independently decodes the image, rejects invalid/animated/oversized input and strips metadata.
-2. `POST /api/anchors/ai-generate` verifies a Firebase ID token, validates the palace owner and atomically reserves a durable daily quota. A client-generated request UUID makes retrying a lost POST idempotent.
+2. `POST /api/anchors/ai-generate` verifies a Firebase ID token, checks private Storage access, validates the palace owner and atomically reserves a durable daily quota. Missing or inaccessible Storage returns a clear error before quota is consumed or a paid task starts. A client-generated request UUID makes retrying a lost POST idempotent.
 3. A persistent job is created under `users/{uid}/ai-jobs/{jobId}`. Next.js `after()` runs Gemini analysis and Tripo upload/task creation concurrently. Each branch records actual completion.
 4. `GET /api/anchors/ai-generate?jobId=…` returns progress and schedules a bounded status check. A Firestore lease prevents concurrent tabs from downloading the same result. Closing the dialog does not buy another task; reopening AI Scan in that palace resumes the latest unfinished draft. Startup and overall timeouts become explicit errors.
 5. The server validates a self-contained GLB, including embedded textures, with a 25 MB maximum, then writes it and a thumbnail beneath `users/{uid}/ai-anchors/{jobId}/` in Storage. Provider responses and keys never enter the client store.

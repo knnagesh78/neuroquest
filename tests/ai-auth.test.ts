@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => ({
   initialize: vi.fn(),
   auth: { verifyIdToken: vi.fn() },
   appCheck: { verifyToken: vi.fn() },
-  bucket: {},
+  bucket: { getFiles: vi.fn() },
 }));
 vi.mock("firebase-admin/app", () => ({
   getApps: mocks.apps,
@@ -21,7 +21,11 @@ vi.mock("firebase-admin/firestore", () => ({ getFirestore: () => ({}) }));
 vi.mock("firebase-admin/storage", () => ({
   getStorage: () => ({ bucket: () => mocks.bucket }),
 }));
-import { getAdmin, requireAiUser } from "@/lib/server/firebase-admin";
+import {
+  getAdmin,
+  requireAiStorage,
+  requireAiUser,
+} from "@/lib/server/firebase-admin";
 
 const request = (extra = {}) =>
   new Request("https://neuroquest.example/api/anchors/ai-generate", {
@@ -89,5 +93,26 @@ describe("Firebase server authentication", () => {
       vi.stubEnv(name, "");
     expect(() => getAdmin()).toThrow("Firebase server credentials");
     expect(mocks.initialize).not.toHaveBeenCalled();
+  });
+  it("checks storage with only the signed-in owner's model prefix", async () => {
+    mocks.bucket.getFiles.mockResolvedValue([[]]);
+    await requireAiStorage("alice");
+    expect(mocks.bucket.getFiles).toHaveBeenCalledWith({
+      prefix: "users/alice/ai-anchors/",
+      maxResults: 1,
+      autoPaginate: false,
+    });
+  });
+  it("sanitizes missing-bucket and access errors before a scan can reserve quota", async () => {
+    mocks.bucket.getFiles.mockRejectedValue(
+      new Error("private credential provider response"),
+    );
+    await expect(requireAiStorage("alice")).rejects.toMatchObject({
+      code: "STORAGE_UNAVAILABLE",
+      status: 503,
+    });
+    await expect(requireAiStorage("alice")).rejects.not.toThrow(
+      "private credential",
+    );
   });
 });

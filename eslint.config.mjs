@@ -11,6 +11,7 @@ export default defineConfig([
     "build/**",
     ".presentation-build/**",
     "output/**",
+    ".local-tools/**",
     "next-env.d.ts",
   ]),
 ]);

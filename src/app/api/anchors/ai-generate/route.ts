@@ -1,7 +1,11 @@
 import { after } from "next/server";
 import { JOB_ID_PATTERN, MAX_SCAN_BYTES } from "@/lib/ai-anchor";
 import { AiError, aiErrorResponse } from "@/lib/server/ai-errors";
-import { requireAiUser, requireSameOrigin } from "@/lib/server/firebase-admin";
+import {
+  requireAiStorage,
+  requireAiUser,
+  requireSameOrigin,
+} from "@/lib/server/firebase-admin";
 import {
   prepareScanImage,
   requireProviderKeys,
@@ -113,6 +117,7 @@ export async function POST(request: Request) {
         "Choose a palace and a valid scan request.",
       );
     const prepared = await prepareScanImage(image, mime);
+    await requireAiStorage(uid);
     const result = await createGeneration(uid, requestId, roomId);
     if (result.created)
       after(() =>
