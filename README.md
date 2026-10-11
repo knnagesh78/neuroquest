@@ -2,11 +2,11 @@
 
 A 3D spatial memory palace for education. Place an idea inside a distinctive artifact, explore its location, then practice remembering it before revealing the note.
 
-NeuroQuest starts with three furnished palaces: Computer Science, Human Anatomy, and World History. Create additional subject palaces from the sidebar, each with its own name, description, color, icon, and memory anchors. The interface pairs a quiet workspace with an illuminated architectural vault, floating artifacts, a spatial map, and a glass study drawer.
+New accounts start with an empty private workspace. Create subject palaces from the sidebar, each with its own name, description, color, icon, and memory anchors. Computer Science, Human Anatomy, and World History remain examples for legacy demo data. The interface pairs a quiet workspace with an illuminated architectural vault, floating artifacts, a spatial map, and a glass study drawer.
 
 ## Run locally
 
-Requirements: **Node.js 20.9 or newer**, npm, and a modern browser. A WebGL-capable browser with hardware acceleration provides the 3D experience; the app also has a usable study fallback when 3D is unavailable.
+Requirements: **Node.js 22 or newer**, npm, and a modern browser. A WebGL-capable browser with hardware acceleration provides the 3D experience; the app also has a usable study fallback when 3D is unavailable.
 
 1. Open a terminal in this project folder.
 2. Install the locked dependencies:
@@ -54,6 +54,12 @@ First sign in or create an account with a username and password. To add a subjec
 
 New anchors support Markdown study material, a category, six artifact shapes, six colors, and editable coordinates. The form suggests an unoccupied position. X and Z must be between -6 and 6, and Y between 0 and 3. The store limits the collection to 300 anchors. Markdown renders headings, lists, tables, links, and fenced code blocks; raw HTML execution is not enabled.
 
+### AI Vision to 3D
+
+Open **Add a memory anchor → AI 3D Scan** to upload or photograph an object. Gemini prepares editable Markdown notes and a recall question while Tripo generates a textured GLB. Preview the model, review the draft and choose **Add to palace**. Manual artifacts remain available. Reopening the dialog resumes the latest unfinished scan in that palace.
+
+This feature uses authenticated Next.js server routes and private Firebase Storage. Configure server credentials, provider keys, rules and Vercel using [AI_3D_SETUP.md](./AI_3D_SETUP.md) and [.env.local.example](./.env.local.example). Keys stay on the server. Daily quotas and idempotent requests limit repeated purchases; failures preserve existing notes. Generated models are study cues and may not accurately reconstruct hidden details.
+
 ### Recall challenge
 
 1. Switch to **Recall challenge**. Lighting dims, titles are hidden, and scene labels become `???`. Search results are unavailable during the challenge.
@@ -92,26 +98,31 @@ neuroquest/
 │   │   ├── layout.tsx              # Metadata, local fonts, global styles
 │   │   ├── page.tsx                # App Router entry point
 │   │   ├── globals.css             # Workspace, scene HUD, responsive styling
-│   │   └── icon.svg
+│   │   ├── icon.svg
+│   │   └── api/anchors/           # Authenticated generation and private model routes
 │   ├── components/
 │   │   ├── NeuroQuest.tsx          # Workspace, map, insights, search, settings
 │   │   ├── three/
 │   │   │   ├── Scene.tsx           # Canvas, architecture, lights, fallback
 │   │   │   ├── CameraController.tsx
 │   │   │   ├── MemoryAnchor.tsx
+│   │   │   ├── AiModelAnchor.tsx  # Normalized GLB, instance materials, recall dimming
+│   │   │   ├── AiModelPreview.tsx # Orbit preview and device fallback
 │   │   │   └── PostProcessing.tsx
 │   │   └── ui/
 │   │       ├── Navigation.tsx
 │   │       ├── ModeSwitcher.tsx
 │   │       ├── AnchorDrawer.tsx    # Markdown, editing, recall, ratings
 │   │       ├── AddAnchorModal.tsx
+│   │       ├── AiScan.tsx         # Upload, camera, durable job progress, preview
 │   │       ├── AddRoomModal.tsx
 │   │       ├── RoomIcon.tsx
 │   │       ├── Dialog.tsx         # Focus containment, restoration, exit motion
 │   │       └── study-panels.css
 │   ├── lib/
 │   │   ├── data.ts                # Rooms and example study material
-│   │   └── types.ts               # Domain types
+│   │   ├── types.ts               # Domain types
+│   │   └── server/                # Firebase Admin, Gemini/Tripo, quotas and jobs
 │   └── store/
 │       └── usePalaceStore.ts       # Shared state, actions, validation, storage
 ├── tests/
@@ -125,7 +136,7 @@ neuroquest/
 ├── postcss.config.mjs
 ├── eslint.config.mjs
 ├── tsconfig.json
-├── vitest.config.ts
+├── vitest.config.mts
 └── README.md
 ```
 
@@ -151,7 +162,7 @@ Persisted fields include rooms, anchors, retention status, review counts and tim
 
 Firebase Auth handles usernames through deterministic internal email aliases and manages passwords. Students provide only a username and password. Username-only accounts cannot receive password-reset emails. The account panel supports **Save & sign out**, exporting notes, installation, and an explicit import of older anonymous device notes. Old `neuroquest-palace` localStorage data is preserved. Signed-in notes are never written to that shared key or a persistent Firestore cache.
 
-**Install NeuroQuest** opens the PWA guide. Supported browsers install the published HTTPS site; Safari users get home-screen instructions. A connection is required for login and cloud notes. The production-only service worker caches a generic offline page, never private content. See [FIREBASE_SETUP.md](./FIREBASE_SETUP.md) for deployment and platform details.
+**Install NeuroQuest** opens the PWA guide. Supported browsers install the published HTTPS site; Safari users get home-screen instructions. A connection is required for login and cloud notes. The production-only service worker caches a generic offline page and at most eight private GLB models for the active account. Models are owner-scoped and cleared on sign-out/account changes. Notes, tokens and Firebase responses are never cached. Offline model revisits cannot check server revocation. See [AI_3D_SETUP.md](./AI_3D_SETUP.md) for cache boundaries and Vercel deployment.
 
 New account/install files include `src/components/account/`, `src/components/pwa/InstallWizard.tsx`, `src/app/manifest.ts`, `src/lib/firebase.ts`, `src/lib/account.ts`, `src/lib/workspace-cloud.ts`, `src/lib/save-queue.ts`, `src/store/useAccountStore.ts`, `public/sw.js`, `public/offline.html`, `public/icons/`, `firestore.rules`, `storage.rules`, `firebase.json`, and `.env.example`.
 

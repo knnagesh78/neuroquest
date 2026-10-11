@@ -79,11 +79,11 @@ Before deploying this security cleanup:
 
 The six Firebase values are public browser configuration and will be visible in the built JavaScript. They must never include service-account credentials or other server secrets. The optional `NEXT_PUBLIC_FIREBASE_APPCHECK_SITE_KEY` is also public; set it only after registering reCAPTCHA v3 for Firebase App Check. App Check is not active just because the code supports it: register the site key and enable enforcement in Firebase before relying on it.
 
-For local production preview, use `npm run build` followed by `npm start`. A Hosting build writes `out/`; that separate static-export workflow is not used by the Vercel production deployment.
+For local production preview, use `npm run build` followed by `npm start`. The AI image-to-3D feature also needs private server credentials and a Storage bucket; follow [AI_3D_SETUP.md](./AI_3D_SETUP.md).
 
-### Optional Firebase Hosting alternative
+### Hosting alternatives
 
-If you intentionally move hosting to Firebase Hosting, this repository has a static-export configuration. From a terminal authenticated as the Firebase project owner, run `npm run build:hosting` and then `npx firebase deploy --only hosting --project neuroquest-c0cf0`. Add the resulting Hosting domain to Authentication's authorized domains and the API key's website allowlist. Deploy `firestore` rules separately only after reviewing them against every app sharing the project; these rules deny paths outside this app's user workspace. The local Firebase CLI must be authenticated to the project owner first; the Firebase Console browser session and CLI session are separate.
+The AI generation and private model routes require a Next.js server. Use Vercel, Firebase App Hosting or a Node server. Plain static Firebase Hosting cannot execute these routes; `build:hosting` reports this limitation. Deploy rules separately with `npm run deploy:rules` after reviewing their scope. The Firebase CLI login manages deployment only; students still sign in with usernames and passwords.
 
 Students open the published HTTPS address and select **Install NeuroQuest** from the sign-in screen, sidebar, or account panel:
 
@@ -91,7 +91,7 @@ Students open the published HTTPS address and select **Install NeuroQuest** from
 - iPhone/iPad: open in Safari, choose Share → Add to Home Screen → Add. Enable “Open as Web App” if offered.
 - Other browsers: the wizard explains the fallback; support depends on the browser and device. Embedded previews may not offer installation.
 
-The manifest includes regular and maskable icons, a home-screen name and standalone display mode. The service worker is registered **only in production** and caches just a generic offline page. It never caches private notes, Firebase responses or account HTML. An internet connection is required to sign in and load or save cloud data. This is an installable online app, not a full offline study database.
+The manifest includes regular and maskable icons, a home-screen name and standalone display mode. The service worker is registered **only in production**. It caches the public offline page and a bounded, owner-scoped set of private GLB models that is cleared on sign-out. It never caches notes, Firebase responses or account HTML. Internet is required for login and cloud saves. See the AI setup guide for offline model limits.
 
 ## 5. Test without touching production
 

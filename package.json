@@ -6,7 +6,9 @@
     "dev": "next dev --hostname 0.0.0.0",
     "build": "next build",
     "build:hosting": "node scripts/build-hosting.mjs",
-    "deploy": "npm run build:hosting && firebase deploy --only auth,hosting,firestore --project neuroquest-c0cf0",
+    "deploy:rules": "firebase deploy --only firestore:rules,storage --project neuroquest-c0cf0",
+    "check:ai": "node scripts/check-ai-setup.mjs",
+    "setup:firebase": "node scripts/import-firebase-admin.mjs",
     "start": "next start --hostname 0.0.0.0",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
@@ -19,18 +21,22 @@
   "dependencies": {
     "@fontsource/dm-sans": "^5.2.8",
     "@fontsource/space-grotesk": "^5.2.10",
+    "@google/genai": "^2.28.0",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.4.0",
     "@react-three/postprocessing": "^3.0.4",
     "firebase": "^12.19.0",
+    "firebase-admin": "^14.5.0",
     "gsap": "^3.14.2",
     "lucide-react": "^0.577.0",
-    "next": "^16.2.0",
+    "next": "^16.4.0",
     "postprocessing": "^6.38.3",
     "react": "~19.2.0",
     "react-dom": "~19.2.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
+    "server-only": "^0.0.1",
+    "sharp": "^0.35.5",
     "three": "^0.183.2",
     "zustand": "^5.0.11"
   },
@@ -42,7 +48,7 @@
     "@types/react-dom": "^19.2.0",
     "@types/three": "^0.183.1",
     "eslint": "^9.39.0",
-    "eslint-config-next": "^16.2.0",
+    "eslint-config-next": "^16.4.0",
     "firebase-tools": "^15.31.0",
     "prettier": "^3.6.2",
     "tailwindcss": "^4.2.1",
@@ -50,6 +56,8 @@
     "vitest": "^4.0.18"
   },
   "overrides": {
+    "@grpc/grpc-js": "^1.14.6",
+    "basic-ftp": "^6.2.3",
     "firebase-tools": {
       "@opentelemetry/core": "^2.8.0",
       "gaxios": {
@@ -58,6 +66,6 @@
     }
   },
   "engines": {
-    "node": ">=20.9.0"
+    "node": ">=22.0.0"
   }
 }

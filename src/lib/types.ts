@@ -19,6 +19,11 @@ export interface MemoryAnchor {
   color: string;
   position: Vec3;
   shape: AnchorShape;
+  artifactType: "preset" | "ai-3d";
+  modelUrl?: string;
+  thumbnailUrl?: string;
+  isGenerating?: boolean;
+  recallPrompt?: string;
   status: Retention;
   reviewCount: number;
   lastReviewedAt: string | null;
@@ -44,7 +49,7 @@ export type NewRoomInput = Omit<Room, "id">;
 
 export type NewAnchorInput = Omit<
   MemoryAnchor,
-  "id" | "status" | "reviewCount" | "lastReviewedAt"
->;
+  "id" | "status" | "reviewCount" | "lastReviewedAt" | "artifactType"
+> & { artifactType?: MemoryAnchor["artifactType"] };
 
 export type AnchorUpdate = Partial<Omit<MemoryAnchor, "id">>;

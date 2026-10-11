@@ -5,6 +5,7 @@ import {
   type PersistStorage,
 } from "zustand/middleware";
 import { INITIAL_ANCHORS, ROOMS } from "@/lib/data";
+import { ASSET_URL_PATTERN } from "@/lib/ai-anchor";
 import type {
   AnchorShape,
   AnchorUpdate,
@@ -193,6 +194,36 @@ function validateAnchor(
   )
     return null;
 
+  const artifactType = value.artifactType ?? "preset";
+  if (artifactType !== "preset" && artifactType !== "ai-3d") return null;
+  if (
+    value.isGenerating !== undefined &&
+    typeof value.isGenerating !== "boolean"
+  )
+    return null;
+  if (
+    value.recallPrompt !== undefined &&
+    (typeof value.recallPrompt !== "string" || value.recallPrompt.length > 500)
+  )
+    return null;
+  for (const field of ["modelUrl", "thumbnailUrl"] as const) {
+    if (
+      value[field] !== undefined &&
+      (typeof value[field] !== "string" ||
+        !ASSET_URL_PATTERN.test(value[field]) ||
+        !value[field].endsWith(
+          field === "modelUrl" ? "/model.glb" : "/thumbnail.webp",
+        ))
+    )
+      return null;
+  }
+  if (
+    artifactType === "ai-3d" &&
+    !value.modelUrl &&
+    value.isGenerating !== true
+  )
+    return null;
+
   return {
     id: value.id,
     roomId: value.roomId,
@@ -201,6 +232,17 @@ function validateAnchor(
     content: value.content,
     color: value.color,
     shape: value.shape as AnchorShape,
+    artifactType,
+    ...(typeof value.modelUrl === "string" ? { modelUrl: value.modelUrl } : {}),
+    ...(typeof value.thumbnailUrl === "string"
+      ? { thumbnailUrl: value.thumbnailUrl }
+      : {}),
+    ...(typeof value.isGenerating === "boolean"
+      ? { isGenerating: value.isGenerating }
+      : {}),
+    ...(typeof value.recallPrompt === "string"
+      ? { recallPrompt: value.recallPrompt.trim() }
+      : {}),
     position: [...value.position] as Vec3,
     status:
       typeof value.status === "string" &&

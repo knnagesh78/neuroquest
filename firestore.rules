@@ -19,8 +19,17 @@ service cloud.firestore {
         && d.subtitle is string && d.subtitle.size() <= 120 && color(d.color)
         && d.icon in ['cpu', 'heart', 'landmark', 'book', 'flask', 'globe'];
     }
-    function validAnchor(d, id) {
-      return d.keys().hasOnly(['id', 'roomId', 'title', 'category', 'content', 'color', 'shape', 'position', 'status', 'reviewCount', 'lastReviewedAt'])
+    function validArtifact(d, uid) {
+      return (!('artifactType' in d) || d.artifactType in ['preset', 'ai-3d'])
+        && (!('isGenerating' in d) || d.isGenerating is bool)
+        && (!('recallPrompt' in d) || (d.recallPrompt is string && d.recallPrompt.size() <= 500))
+        && (!('modelUrl' in d) || (d.modelUrl is string && d.modelUrl.matches('^/api/anchors/assets/' + uid + '/[a-fA-F0-9-]{36}/model[.]glb$')))
+        && (!('thumbnailUrl' in d) || (d.thumbnailUrl is string && d.thumbnailUrl.matches('^/api/anchors/assets/' + uid + '/[a-fA-F0-9-]{36}/thumbnail[.]webp$')))
+        && (!('artifactType' in d) || d.artifactType != 'ai-3d' || ('modelUrl' in d) || (('isGenerating' in d) && d.isGenerating == true));
+    }
+    function validAnchor(d, id, uid) {
+      return d.keys().hasOnly(['id', 'roomId', 'title', 'category', 'content', 'color', 'shape', 'position', 'status', 'reviewCount', 'lastReviewedAt', 'artifactType', 'modelUrl', 'thumbnailUrl', 'isGenerating', 'recallPrompt'])
+        && validArtifact(d, uid)
         && validId(d.id) && id == 'anchor_' + d.id && validId(d.roomId)
         && d.title is string && d.title.size() > 0 && d.title.size() <= 100
         && d.category is string && d.category.size() <= 60
@@ -45,9 +54,15 @@ service cloud.firestore {
         (id == 'meta' && validMeta(request.resource.data)) ||
         (id == 'preferences' && validPreferences(request.resource.data)) ||
         (id.matches('room_.*') && validRoom(request.resource.data, id)) ||
-        (id.matches('anchor_.*') && validAnchor(request.resource.data, id))
+        (id.matches('anchor_.*') && validAnchor(request.resource.data, id, uid))
       );
       allow delete: if owner(uid) && revisionAdvanced(uid) && id.matches('anchor_.*|room_.*');
     }
+    // Generation jobs, quota counters and provider output are server-only.
+    // The Admin SDK bypasses rules; every API route verifies the owner first.
+    match /users/{uid}/ai-jobs/{id} { allow read, write: if false; }
+    match /users/{uid}/ai-room-jobs/{id} { allow read, write: if false; }
+    match /users/{uid}/ai-usage/{id} { allow read, write: if false; }
+    match /ai-usage/{id} { allow read, write: if false; }
   }
 }

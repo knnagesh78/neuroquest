@@ -5,6 +5,7 @@ coverage/
 *.tsbuildinfo
 .env*
 !.env.example
+!.env.local.example
 test-results/
 playwright-report/
 *.log

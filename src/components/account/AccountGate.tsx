@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { getFirebase } from "@/lib/firebase";
 import { accountError, usernameEmail } from "@/lib/account";
+import { syncModelCacheUser } from "@/lib/model-cache-session";
 import { SaveQueue } from "@/lib/save-queue";
 import {
   clearWorkspace,
@@ -77,6 +78,7 @@ export default function AccountGate() {
         unsubscribe = onAuthStateChanged(
           auth,
           (next) => {
+            void syncModelCacheUser(next?.uid ?? null).catch(() => {});
             clearWorkspace();
             useAccountStore.setState({
               username: next?.email?.split("@")[0] ?? "",

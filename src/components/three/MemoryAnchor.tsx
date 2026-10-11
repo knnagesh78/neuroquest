@@ -5,6 +5,8 @@ import { type ThreeEvent, useFrame, useThree } from "@react-three/fiber";
 import { Html, useCursor } from "@react-three/drei";
 import { Group, MathUtils } from "three";
 import AnchorArtifact from "./AnchorArtifact";
+import AiModelAnchor from "./AiModelAnchor";
+import LoadingHologram from "./LoadingHologram";
 import AnchorPedestal from "./AnchorPedestal";
 import { usePalaceStore } from "@/store/usePalaceStore";
 import type { MemoryAnchor as MemoryAnchorData } from "@/lib/types";
@@ -77,12 +79,26 @@ function MemoryAnchor({
         phase={index * 0.8}
       />
       <group ref={float} position={[0, 1.68, 0]}>
-        <AnchorArtifact
-          shape={anchor.shape}
-          color={color}
-          highlighted={highlighted}
-          reducedMotion={reducedMotion}
-        />
+        {anchor.artifactType === "ai-3d" ? (
+          anchor.isGenerating || !anchor.modelUrl ? (
+            <LoadingHologram color={color} reducedMotion={reducedMotion} />
+          ) : (
+            <AiModelAnchor
+              modelUrl={anchor.modelUrl}
+              color={color}
+              highlighted={highlighted}
+              recall={isRecall}
+              reducedMotion={reducedMotion}
+            />
+          )
+        ) : (
+          <AnchorArtifact
+            shape={anchor.shape}
+            color={color}
+            highlighted={highlighted}
+            reducedMotion={reducedMotion}
+          />
+        )}
       </group>
       <pointLight
         position={[0, 1.5, 0]}

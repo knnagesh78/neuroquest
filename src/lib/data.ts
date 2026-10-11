@@ -26,7 +26,7 @@ export const ROOMS: Room[] = [
 
 const unreviewed = { reviewCount: 0, lastReviewedAt: null } as const;
 
-export const INITIAL_ANCHORS: MemoryAnchor[] = [
+const PRESET_ANCHORS: Omit<MemoryAnchor, "artifactType">[] = [
   {
     ...unreviewed,
     id: "cs-data-structures",
@@ -427,3 +427,8 @@ Political stability, geography, and demand affected which routes flourished. Mar
 Why is “Silk Roads” plural? Exchange depended on multiple changing routes and local connections across a vast region.`,
   },
 ];
+
+export const INITIAL_ANCHORS: MemoryAnchor[] = PRESET_ANCHORS.map((anchor) => ({
+  ...anchor,
+  artifactType: "preset",
+}));

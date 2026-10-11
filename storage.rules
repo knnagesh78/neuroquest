@@ -1,8 +1,8 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    // This version stores text notes in Firestore. File uploads are not enabled.
-    // Add explicit per-user paths and file validation before building attachments.
+    // Generated AI files are written only by the server Admin SDK and streamed
+    // through authenticated owner-only API routes. Browser bucket access stays denied.
     match /{allPaths=**} { allow read, write: if false; }
   }
 }

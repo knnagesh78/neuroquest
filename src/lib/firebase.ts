@@ -48,12 +48,12 @@ function initializeServices() {
     throw new Error("Firebase sessions run in the browser.");
   const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
   const appCheckSiteKey = process.env.NEXT_PUBLIC_FIREBASE_APPCHECK_SITE_KEY;
-  if (appCheckSiteKey) {
-    initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider(appCheckSiteKey),
-      isTokenAutoRefreshEnabled: true,
-    });
-  }
+  const appCheck = appCheckSiteKey
+    ? initializeAppCheck(app, {
+        provider: new ReCaptchaV3Provider(appCheckSiteKey),
+        isTokenAutoRefreshEnabled: true,
+      })
+    : undefined;
   const auth = getAuth(app);
   if (process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === "true") {
     connectAuthEmulator(auth, "http://127.0.0.1:9099", {
@@ -62,7 +62,7 @@ function initializeServices() {
   }
   // A college/shared computer should not remain logged in after the tab is closed.
   const ready = setPersistence(auth, browserSessionPersistence);
-  return { app, auth, ready };
+  return { app, auth, ready, appCheck };
 }
 
 export function getFirebase() {

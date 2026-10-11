@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
+import { useCallback, useState, type CSSProperties } from "react";
 import {
   Box,
   Check,
@@ -8,6 +8,7 @@ import {
   Diamond,
   MapPin,
   Plus,
+  ScanLine,
   Sparkles,
   Triangle,
   X,
@@ -16,6 +17,9 @@ import type { MemoryAnchor } from "@/lib/types";
 import { anchorPalette } from "@/lib/anchor-color";
 import { usePalaceStore } from "@/store/usePalaceStore";
 import Dialog from "./Dialog";
+import AiScan from "./AiScan";
+import type { AiGenerationJob } from "@/lib/ai-anchor";
+import "./ai-scan.css";
 
 const shapes: {
   value: MemoryAnchor["shape"];
@@ -67,11 +71,18 @@ function AddAnchorForm() {
   const anchors = usePalaceStore((state) => state.anchors);
   const addAnchor = usePalaceStore((state) => state.addAnchor);
   const setAddOpen = usePalaceStore((state) => state.setAddOpen);
-  const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("");
-  const [content, setContent] = useState("");
+  const [tab, setTab] = useState<"manual" | "ai">("manual");
+  const emptyDraft = { title: "", category: "", content: "", recallPrompt: "" };
+  const [manualDraft, setManualDraft] = useState(emptyDraft);
+  const [aiDraft, setAiDraft] = useState(emptyDraft);
+  const { title, category, content, recallPrompt } =
+    tab === "ai" ? aiDraft : manualDraft;
+  function setField(field: keyof typeof emptyDraft, value: string) {
+    const setDraft = tab === "ai" ? setAiDraft : setManualDraft;
+    setDraft((current) => ({ ...current, [field]: value }));
+  }
   const [color, setColor] = useState(
-      () =>
+    () =>
       anchorPalette[
         anchors.filter((anchor) => anchor.roomId === roomId).length %
           anchorPalette.length
@@ -83,6 +94,20 @@ function AddAnchorForm() {
   );
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [scanOpened, setScanOpened] = useState(false);
+  const [generated, setGenerated] = useState<AiGenerationJob | null>(null);
+  const onReady = useCallback((job: AiGenerationJob) => {
+    if (!job.concept) return;
+    setGenerated(job);
+    setAiDraft({
+      title: job.concept.conceptTitle,
+      category: job.concept.category,
+      content: job.concept.studyNotes,
+      recallPrompt: job.concept.recallPrompt,
+    });
+    setError("");
+  }, []);
+  const onReset = useCallback(() => setGenerated(null), []);
 
   return (
     <form
@@ -90,6 +115,13 @@ function AddAnchorForm() {
       onSubmit={(event) => {
         event.preventDefault();
         if (submitting) return;
+        if (
+          tab === "ai" &&
+          (!generated?.modelUrl || generated.status !== "ready")
+        ) {
+          setError("Finish your AI scan before adding it to the palace.");
+          return;
+        }
         if (!title.trim() || !content.trim()) {
           setError("Give your anchor a title and a little study material.");
           return;
@@ -117,6 +149,17 @@ function AddAnchorForm() {
             content: content.trim(),
             color,
             shape,
+            artifactType: tab === "ai" ? "ai-3d" : "preset",
+            ...(tab === "ai" && generated?.modelUrl
+              ? {
+                  modelUrl: generated.modelUrl,
+                  thumbnailUrl: generated.thumbnailUrl,
+                  isGenerating: false,
+                }
+              : {}),
+            ...(recallPrompt.trim()
+              ? { recallPrompt: recallPrompt.trim() }
+              : {}),
             position: numbers as [number, number, number],
           });
           setAddOpen(false);
@@ -151,121 +194,196 @@ function AddAnchorForm() {
         </p>
       </div>
       <div className="add-scroll">
-        <div className="add-field">
-          <label htmlFor="add-anchor-name">
-            Concept title <span>*</span>
-          </label>
-          <input
-            id="add-anchor-name"
-            data-autofocus
-            placeholder="e.g. The Feynman technique"
-            value={title}
-            maxLength={80}
-            required
-            onChange={(event) => setTitle(event.target.value)}
-          />
-          <span className="add-counter">{title.length}/80</span>
+        <div
+          className="ai-artifact-tabs"
+          role="tablist"
+          aria-label="Anchor creation method"
+        >
+          <button
+            type="button"
+            role="tab"
+            id="manual-anchor-tab"
+            aria-selected={tab === "manual"}
+            aria-controls="anchor-creation-panel"
+            onClick={() => setTab("manual")}
+          >
+            <Diamond size={16} />
+            Manual artifact
+          </button>
+          <button
+            type="button"
+            role="tab"
+            id="ai-anchor-tab"
+            aria-selected={tab === "ai"}
+            aria-controls="anchor-creation-panel"
+            onClick={() => {
+              setTab("ai");
+              setScanOpened(true);
+            }}
+          >
+            <ScanLine size={16} />
+            AI 3D Scan<span>NEW</span>
+          </button>
         </div>
-        <div className="add-field">
-          <label htmlFor="add-anchor-category">
-            Category <span className="add-optional">Optional</span>
-          </label>
-          <input
-            id="add-anchor-category"
-            placeholder="e.g. Learning science"
-            value={category}
-            maxLength={50}
-            onChange={(event) => setCategory(event.target.value)}
-          />
-        </div>
-        <div className="add-field">
-          <label htmlFor="add-anchor-content">
-            Study material <span>*</span>
-            <span className="add-field-hint">Markdown supported</span>
-          </label>
-          <textarea
-            id="add-anchor-content"
-            placeholder={
-              "What should this anchor help you remember?\n\nAdd a definition, an example, or a code snippet."
-            }
-            value={content}
-            maxLength={10000}
-            required
-            rows={5}
-            onChange={(event) => setContent(event.target.value)}
-          />
-        </div>
-        <fieldset className="add-fieldset">
-          <legend>Choose your artifact</legend>
-          <div className="add-shapes">
-            {shapes.map(({ value, label, icon: Icon }) => (
-              <button
-                key={value}
-                className={`add-shape ${shape === value ? "add-shape--selected" : ""}`}
-                type="button"
-                aria-pressed={shape === value}
-                onClick={() => setShape(value)}
-              >
-                <Icon size={22} strokeWidth={1.6} />
-                <span>{label}</span>
-              </button>
-            ))}
-          </div>
-        </fieldset>
-        <fieldset className="add-fieldset">
-          <legend>Make it your color</legend>
-          <div className="add-colors">
-            {anchorPalette.map((swatch) => (
-              <button
-                type="button"
-                className="add-color"
-                key={swatch.value}
-                aria-label={`${swatch.label} color`}
-                aria-pressed={color === swatch.value}
-                style={{ "--swatch-color": swatch.value } as CSSProperties}
-                onClick={() => setColor(swatch.value)}
-              >
-                {color === swatch.value && (
-                  <Check size={17} strokeWidth={2.5} />
-                )}
-              </button>
-            ))}
-            <span>
-              {anchorPalette.find((swatch) => swatch.value === color)?.label}
-            </span>
-          </div>
-        </fieldset>
-        <div className="add-position">
-          <div className="add-position-label">
-            <MapPin size={15} />
-            <span>A spot in your palace</span>
-            <small>Chosen for you. Adjust if you like.</small>
-          </div>
-          <div className="add-coordinates">
-            {["X · left / right", "Y · height", "Z · front / back"].map(
-              (label, index) => (
-                <div key={label}>
-                  <label htmlFor={`add-coordinate-${index}`}>{label}</label>
-                  <input
-                    id={`add-coordinate-${index}`}
-                    type="number"
-                    inputMode="decimal"
-                    step="0.1"
-                    min={index === 1 ? 0 : -6}
-                    max={index === 1 ? 3 : 6}
-                    required
-                    value={position[index]}
-                    onChange={(event) =>
-                      setPosition((current) =>
-                        current.map((value, itemIndex) =>
-                          itemIndex === index ? event.target.value : value,
-                        ),
-                      )
-                    }
-                  />
-                </div>
-              ),
+        <div
+          id="anchor-creation-panel"
+          role="tabpanel"
+          aria-labelledby={tab === "ai" ? "ai-anchor-tab" : "manual-anchor-tab"}
+        >
+          {scanOpened && (
+            <div hidden={tab !== "ai"}>
+              <AiScan
+                roomId={roomId}
+                color={color}
+                onReady={onReady}
+                onReset={onReset}
+              />
+            </div>
+          )}
+          <div hidden={tab === "ai" && !generated}>
+            {tab === "ai" && (
+              <p className="ai-review-note">
+                Review your AI draft. Edit the title, notes and recall question
+                to make them your own.
+              </p>
             )}
+            <div className="add-field">
+              <label htmlFor="add-anchor-name">
+                Concept title <span>*</span>
+              </label>
+              <input
+                id="add-anchor-name"
+                data-autofocus
+                placeholder="e.g. The Feynman technique"
+                value={title}
+                maxLength={80}
+                required={tab === "manual" || !!generated}
+                onChange={(event) => setField("title", event.target.value)}
+              />
+              <span className="add-counter">{title.length}/80</span>
+            </div>
+            <div className="add-field">
+              <label htmlFor="add-anchor-category">
+                Category <span className="add-optional">Optional</span>
+              </label>
+              <input
+                id="add-anchor-category"
+                placeholder="e.g. Learning science"
+                value={category}
+                maxLength={50}
+                onChange={(event) => setField("category", event.target.value)}
+              />
+            </div>
+            <div className="add-field">
+              <label htmlFor="add-anchor-content">
+                Study material <span>*</span>
+                <span className="add-field-hint">Markdown supported</span>
+              </label>
+              <textarea
+                id="add-anchor-content"
+                placeholder={
+                  "What should this anchor help you remember?\n\nAdd a definition, an example, or a code snippet."
+                }
+                value={content}
+                maxLength={10000}
+                required={tab === "manual" || !!generated}
+                rows={5}
+                onChange={(event) => setField("content", event.target.value)}
+              />
+            </div>
+            <div className="add-field">
+              <label htmlFor="add-recall-prompt">
+                Recall question <span className="add-optional">Optional</span>
+              </label>
+              <textarea
+                id="add-recall-prompt"
+                rows={2}
+                maxLength={500}
+                value={recallPrompt}
+                placeholder="What should you remember about this concept?"
+                onChange={(event) =>
+                  setField("recallPrompt", event.target.value)
+                }
+              />
+            </div>
+            {tab === "manual" && (
+              <fieldset className="add-fieldset">
+                <legend>Choose your artifact</legend>
+                <div className="add-shapes">
+                  {shapes.map(({ value, label, icon: Icon }) => (
+                    <button
+                      key={value}
+                      className={`add-shape ${shape === value ? "add-shape--selected" : ""}`}
+                      type="button"
+                      aria-pressed={shape === value}
+                      onClick={() => setShape(value)}
+                    >
+                      <Icon size={22} strokeWidth={1.6} />
+                      <span>{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+            )}
+            <fieldset className="add-fieldset">
+              <legend>Make it your color</legend>
+              <div className="add-colors">
+                {anchorPalette.map((swatch) => (
+                  <button
+                    type="button"
+                    className="add-color"
+                    key={swatch.value}
+                    aria-label={`${swatch.label} color`}
+                    aria-pressed={color === swatch.value}
+                    style={{ "--swatch-color": swatch.value } as CSSProperties}
+                    onClick={() => setColor(swatch.value)}
+                  >
+                    {color === swatch.value && (
+                      <Check size={17} strokeWidth={2.5} />
+                    )}
+                  </button>
+                ))}
+                <span>
+                  {
+                    anchorPalette.find((swatch) => swatch.value === color)
+                      ?.label
+                  }
+                </span>
+              </div>
+            </fieldset>
+            <div className="add-position">
+              <div className="add-position-label">
+                <MapPin size={15} />
+                <span>A spot in your palace</span>
+                <small>Chosen for you. Adjust if you like.</small>
+              </div>
+              <div className="add-coordinates">
+                {["X · left / right", "Y · height", "Z · front / back"].map(
+                  (label, index) => (
+                    <div key={label}>
+                      <label htmlFor={`add-coordinate-${index}`}>{label}</label>
+                      <input
+                        id={`add-coordinate-${index}`}
+                        type="number"
+                        inputMode="decimal"
+                        step="0.1"
+                        min={index === 1 ? 0 : -6}
+                        max={index === 1 ? 3 : 6}
+                        required
+                        value={position[index]}
+                        onChange={(event) =>
+                          setPosition((current) =>
+                            current.map((value, itemIndex) =>
+                              itemIndex === index ? event.target.value : value,
+                            ),
+                          )
+                        }
+                      />
+                    </div>
+                  ),
+                )}
+              </div>
+            </div>
           </div>
         </div>
         {error && (
@@ -279,7 +397,11 @@ function AddAnchorForm() {
           <Sparkles size={14} />
           An idea becomes a place.
         </span>
-        <button type="submit" className="drawer-primary" disabled={submitting}>
+        <button
+          type="submit"
+          className="drawer-primary"
+          disabled={submitting || (tab === "ai" && !generated)}
+        >
           <Plus size={17} />
           {submitting ? "Adding…" : "Add to palace"}
         </button>

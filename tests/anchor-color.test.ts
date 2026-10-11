@@ -37,17 +37,12 @@ describe("anchor display colors", () => {
   });
 
   it("refreshes a single old default anchor with the new vivid color", () => {
-    expect(getAnchorDisplayColors([{ color: "#b8ee83" }])).toEqual([
-      "#A855F7",
-    ]);
+    expect(getAnchorDisplayColors([{ color: "#b8ee83" }])).toEqual(["#A855F7"]);
   });
 
   it("avoids repeating custom colors within a palace when possible", () => {
     expect(
-      getAnchorDisplayColors([
-        { color: "#44aabb" },
-        { color: "#44aabb" },
-      ]),
+      getAnchorDisplayColors([{ color: "#44aabb" }, { color: "#44aabb" }]),
     ).toEqual(["#44aabb", "#FBBF24"]);
   });
 });
