@@ -6,7 +6,7 @@ An image can be ambiguous. Generated meshes are visual study cues, not precise r
 
 ## Configure the server
 
-1. Install dependencies with `npm ci`. Use Node.js 22 or 24 for development and hosting.
+1. Install dependencies with `npm ci`. Use Node.js 22.12 or newer in the 22 series, or Node.js 24 for development and hosting.
 2. Keep the browser Firebase values from `.env.example` in `.env.local`.
 3. Add the server variables from `.env.local.example`. Use valid Gemini and Tripo keys. Replace keys that were shared in chat or committed elsewhere. Never give server keys a `NEXT_PUBLIC_` prefix.
 4. Set `FIREBASE_ADMIN_CLIENT_EMAIL` and `FIREBASE_ADMIN_PRIVATE_KEY` from a dedicated Firebase/Google Cloud service account in the **same project** as the browser app. The server account needs Firebase Authentication read access (including revoked-token/user checks) and Firestore access. Firebase hosting mode also requires access to the configured Storage bucket. Use least-privilege IAM roles suitable for these operations; never put the credential JSON in the repository. The private-key value supports escaped `\n` newlines. On Google infrastructure, Application Default Credentials are supported instead.
@@ -30,6 +30,8 @@ See the official [Admin SDK setup](https://firebase.google.com/docs/admin/setup)
 ## Deploy with Vercel
 
 Use the normal Next.js preset, `npm run build`, and the repository's lock file. Configure all browser Firebase and private server variables in Vercel's Environment Variables, select the appropriate production/preview environments, then redeploy. Configure Firebase authorized domains for your deployed host. Server routes use the Node runtime; generation routes allow up to 120 seconds for bounded preparation/download work. Mesh generation itself runs at Tripo and can take several minutes. Verify that your Vercel plan supports the configured duration.
+
+With Firebase Admin 14 and `jwks-rsa` 4, add the non-secret Vercel config **`NODE_OPTIONS=--experimental-require-module`**. Vercel otherwise disables the Node feature needed to load the ESM `jose` dependency from CommonJS. A build may succeed while every AI route returns 500 at startup. This setting enables module loading; it does not skip token verification or downgrade authentication dependencies. Vercel documents the option in [Advanced Node.js Usage](https://vercel.com/docs/functions/runtimes/node-js/advanced-node-configuration#experimental-nodejs-require-of-es-module); the dependency issue is tracked by [Auth0](https://github.com/auth0/node-jwks-rsa/issues/507). Run `npm run check:runtime` and verify an unauthenticated production AI request returns a JSON 401 after deploying. Redeploy after changing the setting.
 
 Plain static Firebase Hosting cannot run these server routes. `build:hosting` explains this limitation instead of publishing a nonfunctional AI feature. Use Vercel, a Next.js Node server or Firebase App Hosting. Deploy Firestore/Storage rules separately from the web application.
 

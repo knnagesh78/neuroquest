@@ -8,6 +8,7 @@
     "build:hosting": "node scripts/build-hosting.mjs",
     "deploy:rules": "firebase deploy --only firestore:rules,storage --project neuroquest-c0cf0",
     "check:ai": "node scripts/check-ai-setup.mjs",
+    "check:runtime": "node --experimental-require-module scripts/check-server-runtime.mjs",
     "setup:firebase": "node scripts/import-firebase-admin.mjs",
     "start": "next start --hostname 0.0.0.0",
     "lint": "eslint .",
@@ -66,6 +67,6 @@
     }
   },
   "engines": {
-    "node": ">=22.0.0"
+    "node": "^22.12.0 || >=24.0.0"
   }
 }

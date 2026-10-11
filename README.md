@@ -6,7 +6,7 @@ New accounts start with an empty private workspace. Create subject palaces from 
 
 ## Run locally
 
-Requirements: **Node.js 22 or newer**, npm, and a modern browser. A WebGL-capable browser with hardware acceleration provides the 3D experience; the app also has a usable study fallback when 3D is unavailable.
+Requirements: **Node.js 22.12+ or 24**, npm, and a modern browser. A WebGL-capable browser with hardware acceleration provides the 3D experience; the app also has a usable study fallback when 3D is unavailable.
 
 1. Open a terminal in this project folder.
 2. Install the locked dependencies:
