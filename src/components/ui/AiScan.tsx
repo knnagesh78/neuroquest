@@ -45,6 +45,8 @@ export default function AiScan({
   >(null);
   const [error, setError] = useState("");
   const [dragging, setDragging] = useState(false);
+  const errorMessage = useRef<HTMLDivElement>(null);
+  const startupMessage = useRef<HTMLDivElement>(null);
   const uploadInput = useRef<HTMLInputElement>(null);
   const controller = useRef<AbortController | null>(null);
   const requestId = useRef("");
@@ -62,6 +64,13 @@ export default function AiScan({
         : preparation === "recovering"
           ? "Checking whether your scan started…"
           : "Preparing your image…";
+
+  useEffect(() => {
+    // Upload controls can scroll the modal; keep new feedback in its visible area.
+    const feedback =
+      error || job?.error ? errorMessage.current : startupMessage.current;
+    feedback?.scrollIntoView({ block: "nearest" });
+  }, [error, job?.error, preparation]);
 
   useEffect(() => {
     const abort = new AbortController();
@@ -248,7 +257,7 @@ export default function AiScan({
         </div>
       </div>
       {(error || job?.error) && (
-        <div className="ai-scan-error" role="alert">
+        <div ref={errorMessage} className="ai-scan-error" role="alert">
           <AlertCircle size={19} aria-hidden="true" />
           <div>
             <strong>
@@ -259,7 +268,12 @@ export default function AiScan({
         </div>
       )}
       {preparing && (
-        <div className="ai-start-status" role="status" aria-live="polite">
+        <div
+          ref={startupMessage}
+          className="ai-start-status"
+          role="status"
+          aria-live="polite"
+        >
           <LoaderCircle size={18} className="spin" aria-hidden="true" />
           <div>
             <strong>{preparationLabel}</strong>
