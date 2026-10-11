@@ -11,11 +11,13 @@ import { syncModelCacheUser } from "./model-cache-session";
 export async function authenticatedFetch(url: string, init: RequestInit = {}) {
   const { auth, appCheck, ready } = getFirebase();
   await ready;
+  init.signal?.throwIfAborted();
   const user = auth.currentUser;
   if (!user) throw new Error("Sign in before starting an AI scan.");
   if (url.startsWith("/api/anchors/assets/"))
     await syncModelCacheUser(user.uid);
   for (let attempt = 0; attempt < 2; attempt++) {
+    init.signal?.throwIfAborted();
     const token = await user.getIdToken(attempt === 1);
     if (auth.currentUser?.uid !== user.uid)
       throw new Error("Your account changed. Open the scan again.");
@@ -25,6 +27,7 @@ export async function authenticatedFetch(url: string, init: RequestInit = {}) {
       const check = await getToken(appCheck).catch(() => null);
       if (check) headers.set("X-Firebase-AppCheck", check.token);
     }
+    init.signal?.throwIfAborted();
     const response = await fetch(url, { ...init, cache: "no-store", headers });
     if (response.status !== 401 || attempt === 1) return response;
   }
@@ -35,14 +38,51 @@ export async function requestAiJob(
   url: string,
   init?: RequestInit,
 ): Promise<AiGenerationJob | null> {
-  const response = await authenticatedFetch(url, init);
-  const data = await response.json().catch(() => null);
-  if (!response.ok)
-    throw new Error(
-      data?.error ||
-        "The scan could not connect. Check your connection and retry.",
-    );
-  return data?.job ?? null;
+  // Bound the entire request, including login checks and reading the response.
+  // The caller retains its request ID so a lost response can be recovered safely.
+  const abort = new AbortController();
+  const cancel = () => abort.abort(init?.signal?.reason);
+  init?.signal?.addEventListener("abort", cancel, { once: true });
+  if (init?.signal?.aborted) cancel();
+  let rejectOnAbort: () => void;
+  const interrupted = new Promise<never>((_, reject) => {
+    rejectOnAbort = () => reject(abort.signal.reason);
+    if (abort.signal.aborted) rejectOnAbort();
+    else abort.signal.addEventListener("abort", rejectOnAbort, { once: true });
+  });
+  const timer = setTimeout(
+    () =>
+      abort.abort(
+        new Error(
+          "The scan server is taking too long to respond. Check your connection and try again; an accepted scan can resume when you reopen this palace.",
+        ),
+      ),
+    45000,
+  );
+  try {
+    return await Promise.race([
+      interrupted,
+      (async () => {
+        abort.signal.throwIfAborted();
+        const response = await authenticatedFetch(url, {
+          ...init,
+          signal: abort.signal,
+        });
+        const data = await response.json().catch(() => null);
+        abort.signal.throwIfAborted();
+        if (!response.ok)
+          throw new Error(
+            data?.error ||
+              "The scan could not connect. Check your connection and retry.",
+          );
+        return data?.job ?? null;
+      })(),
+    ]);
+  } finally {
+    clearTimeout(timer);
+    init?.signal?.removeEventListener("abort", cancel);
+    abort.signal.removeEventListener("abort", rejectOnAbort!);
+  }
 }
 
 export async function resizeScanPhoto(file: File): Promise<File> {

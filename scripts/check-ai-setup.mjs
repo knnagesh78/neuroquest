@@ -71,6 +71,28 @@ if (!process.argv.includes("--offline")) {
           `${name}: HTTP ${response.status}${response.ok ? " (credential check passed)" : " (check API key, API access and account configuration)"}`,
         );
         if (!response.ok) process.exitCode = 1;
+        else if (name === "Tripo") {
+          const result = await response.json().catch(() => null);
+          const balance = result?.data?.balance;
+          if (
+            result?.code !== 0 ||
+            typeof balance !== "number" ||
+            !Number.isFinite(balance)
+          ) {
+            console.log(
+              "Tripo API credits: could not verify generation availability",
+            );
+            process.exitCode = 1;
+          } else {
+            console.log(`Tripo available API credits: ${balance}`);
+            if (balance <= 0) {
+              console.log(
+                "3D scans cannot start: no Tripo API credits. API and web-app credits are separate.",
+              );
+              process.exitCode = 1;
+            }
+          }
+        }
       } catch {
         console.log(`${name}: could not reach the provider`);
         process.exitCode = 1;

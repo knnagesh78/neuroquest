@@ -9,10 +9,17 @@ vi.mock("@/lib/model-cache-session", () => ({
   syncModelCacheUser: mocks.cacheSession,
 }));
 vi.mock("firebase/app-check", () => ({ getToken: mocks.appCheck }));
-import { authenticatedFetch, resizeScanPhoto } from "@/lib/ai-client";
+import {
+  authenticatedFetch,
+  requestAiJob,
+  resizeScanPhoto,
+} from "@/lib/ai-client";
 
 beforeEach(() => vi.resetAllMocks());
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
 describe("authenticated AI requests", () => {
   it("refreshes a rejected ID token once and establishes the model cache session", async () => {
     const user = {
@@ -65,6 +72,89 @@ describe("authenticated AI requests", () => {
       authenticatedFetch("/api/anchors/ai-generate"),
     ).rejects.toThrow("account changed");
     expect(fetcher).not.toHaveBeenCalled();
+  });
+});
+
+describe("scan request feedback", () => {
+  function signedIn() {
+    const user = {
+      uid: "alice",
+      getIdToken: vi.fn().mockResolvedValue("token"),
+    };
+    mocks.firebase.mockReturnValue({
+      auth: { currentUser: user },
+      ready: Promise.resolve(),
+    });
+    return user;
+  }
+  it("preserves the service's explanation when generation credits are exhausted", async () => {
+    signedIn();
+    const message = "The Tripo API account has no credits.";
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          Response.json(
+            { error: message, code: "MESH_CREDITS_REQUIRED" },
+            { status: 503 },
+          ),
+        ),
+    );
+    await expect(requestAiJob("/api/anchors/ai-generate")).rejects.toThrow(
+      message,
+    );
+  });
+  it("times out a stalled server instead of keeping the scan busy indefinitely", async () => {
+    vi.useFakeTimers();
+    signedIn();
+    const fetcher = vi.fn().mockImplementation(() => new Promise(() => {}));
+    vi.stubGlobal("fetch", fetcher);
+    const request = requestAiJob("/api/anchors/ai-generate");
+    const result = expect(request).rejects.toThrow("taking too long");
+    await vi.advanceTimersByTimeAsync(45000);
+    await result;
+    expect(fetcher.mock.calls[0][1].signal.aborted).toBe(true);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+  it("never uploads late when login verification resolves after the timeout", async () => {
+    vi.useFakeTimers();
+    const user = signedIn();
+    let finishLogin!: (value: string) => void;
+    user.getIdToken.mockImplementation(
+      () =>
+        new Promise<string>((resolve) => {
+          finishLogin = resolve;
+        }),
+    );
+    const fetcher = vi.fn();
+    vi.stubGlobal("fetch", fetcher);
+    const request = requestAiJob("/api/anchors/ai-generate", {
+      method: "POST",
+    });
+    const result = expect(request).rejects.toThrow("taking too long");
+    await vi.advanceTimersByTimeAsync(45000);
+    await result;
+    finishLogin("late-token");
+    await vi.advanceTimersByTimeAsync(0);
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+  it("cancels promptly while authentication is still loading", async () => {
+    vi.useFakeTimers();
+    mocks.firebase.mockReturnValue({ ready: new Promise(() => {}) });
+    const fetcher = vi.fn();
+    vi.stubGlobal("fetch", fetcher);
+    const abort = new AbortController();
+    const request = requestAiJob("/api/anchors/ai-generate", {
+      signal: abort.signal,
+    });
+    const result = expect(request).rejects.toMatchObject({
+      name: "AbortError",
+    });
+    abort.abort();
+    await result;
+    expect(fetcher).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
   });
 });
 

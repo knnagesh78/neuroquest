@@ -2,6 +2,7 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import {
+  AlertCircle,
   Camera,
   Check,
   ImagePlus,
@@ -39,7 +40,9 @@ export default function AiScan({
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
   const [job, setJob] = useState<AiGenerationJob | null>(null);
-  const [preparing, setPreparing] = useState(false);
+  const [preparation, setPreparation] = useState<
+    "image" | "saving" | "checking" | "recovering" | null
+  >(null);
   const [error, setError] = useState("");
   const [dragging, setDragging] = useState(false);
   const uploadInput = useRef<HTMLInputElement>(null);
@@ -49,7 +52,16 @@ export default function AiScan({
   const previewUrl = useRef("");
   const mounted = useRef(true);
   const working = !!job && job.status !== "ready" && job.status !== "failed";
+  const preparing = preparation !== null;
   const busy = preparing || working;
+  const preparationLabel =
+    preparation === "saving"
+      ? "Saving your palace…"
+      : preparation === "checking"
+        ? "Checking AI services…"
+        : preparation === "recovering"
+          ? "Checking whether your scan started…"
+          : "Preparing your image…";
 
   useEffect(() => {
     const abort = new AbortController();
@@ -135,7 +147,7 @@ export default function AiScan({
 
   async function chooseFile(value?: File) {
     if (!value || busy) return;
-    setPreparing(true);
+    setPreparation("image");
     setError("");
     try {
       const resized = await resizeScanPhoto(value);
@@ -156,7 +168,7 @@ export default function AiScan({
             : "This image could not be opened.",
         );
     } finally {
-      if (mounted.current) setPreparing(false);
+      if (mounted.current) setPreparation(null);
     }
   }
 
@@ -164,7 +176,7 @@ export default function AiScan({
     if (!file || busy) return;
     const abort = new AbortController();
     controller.current = abort;
-    setPreparing(true);
+    setPreparation("saving");
     setError("");
     onReset();
     try {
@@ -173,6 +185,8 @@ export default function AiScan({
           "Resolve the cloud saving conflict before starting a scan.",
         );
       await session?.retry(); // Flush a just-created room before the server verifies ownership.
+      if (abort.signal.aborted) return;
+      setPreparation("checking");
       const form = new FormData();
       form.append("image", file);
       form.append("roomId", roomId);
@@ -193,6 +207,7 @@ export default function AiScan({
             : "The scan could not start.",
         );
         // A lost POST response must not accidentally purchase a duplicate task.
+        setPreparation("recovering");
         const recovered = await requestAiJob(
           `/api/anchors/ai-generate?jobId=${requestId.current}`,
           { signal: abort.signal },
@@ -200,7 +215,7 @@ export default function AiScan({
         if (recovered && !abort.signal.aborted) setJob(recovered);
       }
     } finally {
-      if (!abort.signal.aborted) setPreparing(false);
+      if (!abort.signal.aborted) setPreparation(null);
     }
   }
 
@@ -232,6 +247,34 @@ export default function AiScan({
           <p>Choose one object, organ or circuit. A clear image works best.</p>
         </div>
       </div>
+      {(error || job?.error) && (
+        <div className="ai-scan-error" role="alert">
+          <AlertCircle size={19} aria-hidden="true" />
+          <div>
+            <strong>
+              {working ? "Connection interrupted" : "Scan unavailable"}
+            </strong>
+            <p>{job?.error || error}</p>
+          </div>
+        </div>
+      )}
+      {preparing && (
+        <div className="ai-start-status" role="status" aria-live="polite">
+          <LoaderCircle size={18} className="spin" aria-hidden="true" />
+          <div>
+            <strong>{preparationLabel}</strong>
+            <p>
+              {preparation === "image"
+                ? "Resizing your photo for upload."
+                : preparation === "saving"
+                  ? "Saving this palace to your account before starting."
+                  : preparation === "recovering"
+                    ? "Checking the original request to avoid a duplicate scan."
+                    : "Verifying your login and available 3D generation credits. The generation steps appear once your scan is accepted."}
+            </p>
+          </div>
+        </div>
+      )}
       {!job && (
         <>
           <input
@@ -310,7 +353,7 @@ export default function AiScan({
             ) : (
               <ScanLine size={17} />
             )}
-            {preparing ? "Preparing your image…" : "Generate 3D memory"}
+            {preparing ? preparationLabel : "Generate 3D memory"}
           </button>
           <p className="ai-upload-note">
             This sends your image to Gemini and Tripo. Review the model and
@@ -382,11 +425,6 @@ export default function AiScan({
             </button>
           )}
         </div>
-      )}
-      {(error || job?.error) && (
-        <p className="add-error" role="alert">
-          {job?.error || error}
-        </p>
       )}
     </section>
   );
