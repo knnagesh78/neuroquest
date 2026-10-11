@@ -21,6 +21,11 @@ const needed = [
   "FIREBASE_ADMIN_PRIVATE_KEY",
 ];
 const adc = !!process.env.GOOGLE_APPLICATION_CREDENTIALS;
+const hosting = process.env.AI_MODEL_STORAGE || "firebase";
+if (!["firebase", "provider"].includes(hosting)) {
+  console.log("AI model hosting: invalid (use firebase or provider)");
+  process.exitCode = 1;
+} else console.log(`AI model hosting: ${hosting}`);
 for (const name of needed) {
   const configured = !!process.env[name];
   console.log(
@@ -35,13 +40,13 @@ const projectId =
 const storageBucket =
   process.env.FIREBASE_STORAGE_BUCKET ||
   process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
-if (!projectId || !storageBucket) {
-  console.log("Firebase project / Storage bucket: missing");
+if (!projectId || (hosting !== "provider" && !storageBucket)) {
+  console.log("Firebase project / required Storage bucket: missing");
   process.exitCode = 1;
 } else if (projectId !== process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
   console.log("Firebase server project: does not match the browser app");
   process.exitCode = 1;
-} else console.log("Firebase project / Storage bucket: configured");
+} else console.log("Firebase project / model hosting: configured");
 if (!process.argv.includes("--offline")) {
   const checks = [
     [
@@ -74,7 +79,7 @@ if (!process.argv.includes("--offline")) {
   );
   if (
     projectId &&
-    storageBucket &&
+    (storageBucket || hosting === "provider") &&
     (adc ||
       (process.env.FIREBASE_ADMIN_CLIENT_EMAIL &&
         process.env.FIREBASE_ADMIN_PRIVATE_KEY))
@@ -119,14 +124,22 @@ if (!process.argv.includes("--offline")) {
           () =>
             db.doc(`ai-usage/${new Date().toISOString().slice(0, 10)}`).get(),
         ],
-        [
-          "Private Storage read access",
-          () =>
-            getStorage(app)
-              .bucket()
-              .getFiles({ maxResults: 1, autoPaginate: false }),
-        ],
+        ...(hosting === "firebase"
+          ? [
+              [
+                "Private Storage read access",
+                () =>
+                  getStorage(app)
+                    .bucket()
+                    .getFiles({ maxResults: 1, autoPaginate: false }),
+              ],
+            ]
+          : []),
       ];
+      if (hosting === "provider")
+        console.log(
+          "Firebase Storage: not required; model downloads depend on Tripo task retention and API access",
+        );
       await Promise.all(
         checks.map(async ([name, run]) => {
           try {

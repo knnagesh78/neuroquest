@@ -21,6 +21,7 @@ export interface AiGenerationJob {
   concept?: VisionConcept;
   modelUrl?: string;
   thumbnailUrl?: string;
+  modelHosting?: "provider";
   error?: string;
 }
 

@@ -10,6 +10,7 @@ import { getAppCheck } from "firebase-admin/app-check";
 import { getFirestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import { AiError } from "./ai-errors";
+import { getAiStorageMode } from "./ai-storage-mode";
 
 export function getAdmin() {
   const projectId =
@@ -17,7 +18,10 @@ export function getAdmin() {
     process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
   const storageBucket =
     process.env.FIREBASE_STORAGE_BUCKET ||
-    process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
+    process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ||
+    (getAiStorageMode() === "provider" && projectId
+      ? `${projectId}.firebasestorage.app`
+      : undefined);
   const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
   const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(
     /\\n/g,
@@ -37,7 +41,7 @@ export function getAdmin() {
     )
       throw new AiError(
         "SERVER_SETUP_REQUIRED",
-        "AI scans need Firebase server credentials and a Storage bucket. Ask the project owner to finish the AI setup.",
+        "AI scans need Firebase server credentials and model hosting configuration. Ask the project owner to finish the AI setup.",
         503,
       );
     app = initializeApp(
@@ -92,6 +96,7 @@ export async function requireAiUser(request: Request) {
 
 /** Check private storage before reserving quota or starting a purchased task. */
 export async function requireAiStorage(uid: string) {
+  if (getAiStorageMode() === "provider") return;
   try {
     await getAdmin().bucket.getFiles({
       prefix: `users/${uid}/ai-anchors/`,

@@ -39,6 +39,7 @@ beforeEach(() => {
     firebase: { sign_in_provider: "password" },
   });
   vi.stubEnv("FIREBASE_REQUIRE_APP_CHECK", "false");
+  vi.stubEnv("AI_MODEL_STORAGE", "firebase");
 });
 afterEach(() => vi.unstubAllEnvs());
 
@@ -102,6 +103,19 @@ describe("Firebase server authentication", () => {
       maxResults: 1,
       autoPaginate: false,
     });
+  });
+  it("supports explicit provider hosting without requiring a Firebase bucket", async () => {
+    vi.stubEnv("AI_MODEL_STORAGE", "provider");
+    await requireAiStorage("alice");
+    expect(mocks.bucket.getFiles).not.toHaveBeenCalled();
+  });
+  it("rejects an unknown hosting mode before using storage", async () => {
+    vi.stubEnv("AI_MODEL_STORAGE", "typo");
+    await expect(requireAiStorage("alice")).rejects.toMatchObject({
+      code: "INVALID_STORAGE_MODE",
+      status: 503,
+    });
+    expect(mocks.bucket.getFiles).not.toHaveBeenCalled();
   });
   it("sanitizes missing-bucket and access errors before a scan can reserve quota", async () => {
     mocks.bucket.getFiles.mockRejectedValue(

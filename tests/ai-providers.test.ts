@@ -14,6 +14,7 @@ import {
   getMesh,
   MAX_MODEL_BYTES,
   prepareScanImage,
+  requireMeshCredits,
   startMesh,
   validateGlb,
   validateProviderAssetUrl,
@@ -43,6 +44,48 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
+});
+
+describe("mesh credit preflight", () => {
+  it("checks existing credits without uploading an image or creating a task", async () => {
+    const fetcher = vi
+      .fn()
+      .mockResolvedValue(Response.json({ code: 0, data: { balance: 100 } }));
+    vi.stubGlobal("fetch", fetcher);
+    await requireMeshCredits();
+    expect(fetcher).toHaveBeenCalledOnce();
+    expect(fetcher.mock.calls[0][0]).toContain("/user/balance");
+    expect(fetcher.mock.calls[0][1].method).toBeUndefined();
+  });
+  it.each([0, -1])(
+    "returns a clear error for exhausted balance %s",
+    async (balance) => {
+      vi.stubGlobal(
+        "fetch",
+        vi
+          .fn()
+          .mockResolvedValue(Response.json({ code: 0, data: { balance } })),
+      );
+      await expect(requireMeshCredits()).rejects.toMatchObject({
+        code: "MESH_CREDITS_REQUIRED",
+        status: 503,
+      });
+    },
+  );
+  it("does not proceed when account availability is unreadable", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          Response.json({ code: 0, data: { balance: "unknown" } }),
+        ),
+    );
+    await expect(requireMeshCredits()).rejects.toMatchObject({
+      code: "MESH_SERVICE_FAILED",
+      status: 503,
+    });
+  });
 });
 
 describe("image validation and structured vision", () => {

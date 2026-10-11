@@ -9,6 +9,7 @@ import {
 import {
   prepareScanImage,
   requireProviderKeys,
+  requireMeshCredits,
 } from "@/lib/server/ai-providers";
 import {
   advanceGeneration,
@@ -118,6 +119,15 @@ export async function POST(request: Request) {
       );
     const prepared = await prepareScanImage(image, mime);
     await requireAiStorage(uid);
+    // A lost POST can resume its original job even when its task used the last
+    // credits. Only a new request needs an availability check before quota.
+    try {
+      await readGeneration(uid, requestId);
+    } catch (error) {
+      if (!(error instanceof AiError) || error.code !== "SCAN_NOT_FOUND")
+        throw error;
+      await requireMeshCredits();
+    }
     const result = await createGeneration(uid, requestId, roomId);
     if (result.created)
       after(() =>

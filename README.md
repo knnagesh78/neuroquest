@@ -58,7 +58,7 @@ New anchors support Markdown study material, a category, six artifact shapes, si
 
 Open **Add a memory anchor → AI 3D Scan** to upload or photograph an object. Gemini prepares editable Markdown notes and a recall question while Tripo generates a textured GLB. Preview the model, review the draft and choose **Add to palace**. Manual artifacts remain available. Reopening the dialog resumes the latest unfinished scan in that palace.
 
-This feature uses authenticated Next.js server routes and private Firebase Storage. Configure server credentials, provider keys, rules and Vercel using [AI_3D_SETUP.md](./AI_3D_SETUP.md) and [.env.local.example](./.env.local.example). Keys stay on the server. Daily quotas and idempotent requests limit repeated purchases; failures preserve existing notes. Generated models are study cues and may not accurately reconstruct hidden details.
+This feature uses authenticated Next.js server routes with either private Firebase Storage or Tripo hosting (`AI_MODEL_STORAGE=provider`) for Firebase's free plan. Provider mode refreshes expiring model links and keeps thumbnails in Firestore; future downloads depend on Tripo retaining the task. Configure server credentials, provider keys, rules and Vercel using [AI_3D_SETUP.md](./AI_3D_SETUP.md) and [.env.local.example](./.env.local.example). Keys stay on the server. Daily quotas and idempotent requests limit repeated purchases; failures preserve existing notes. An empty Tripo credit balance blocks a new scan before quota or AI requests are started. Generated models are study cues and may not accurately reconstruct hidden details.
 
 ### Recall challenge
 

@@ -1,8 +1,14 @@
 import "server-only";
+import { createHash } from "node:crypto";
 import type { AiGenerationJob, VisionConcept } from "@/lib/ai-anchor";
 import { assetUrl } from "@/lib/ai-anchor";
 import { getAdmin } from "./firebase-admin";
 import { AiError, safeAiError } from "./ai-errors";
+import {
+  getAiStorageMode,
+  MAX_THUMBNAIL_BYTES,
+  type AiStorageMode,
+} from "./ai-storage-mode";
 import {
   analyzeConcept,
   downloadModel,
@@ -14,7 +20,9 @@ export interface StoredAiJob extends AiGenerationJob {
   uid: string;
   createdAt: number;
   taskId?: string;
-  providerModelUrl?: string;
+  storageProvider?: AiStorageMode;
+  thumbnailBase64?: string;
+  modelSha256?: string;
   leaseUntil: number;
   nextPollAt: number;
 }
@@ -47,6 +55,9 @@ export function publicJob(job: StoredAiJob): AiGenerationJob {
     ...(concept ? { concept } : {}),
     ...(modelUrl ? { modelUrl } : {}),
     ...(thumbnailUrl ? { thumbnailUrl } : {}),
+    ...(job.storageProvider === "provider"
+      ? { modelHosting: "provider" as const }
+      : {}),
     ...(error ? { error } : {}),
   };
 }
@@ -56,6 +67,7 @@ export async function createGeneration(
   id: string,
   roomId: string,
 ) {
+  const storageProvider = getAiStorageMode();
   const { db } = getAdmin();
   const ref = jobRef(uid, id);
   const day = new Date().toISOString().slice(0, 10);
@@ -125,6 +137,7 @@ export async function createGeneration(
       progress: 0,
       leaseUntil: 0,
       nextPollAt: 0,
+      storageProvider,
     };
     transaction.set(ref, job);
     transaction.set(userQuota, { count: count + 1, lastStartedAt: now });
@@ -165,15 +178,27 @@ export async function prepareGeneration(
 ) {
   const ref = jobRef(uid, id);
   try {
-    await getAdmin()
-      .bucket.file(assetPath(uid, id, "thumbnail.webp"))
-      .save(thumbnail, {
-        resumable: false,
-        metadata: {
-          contentType: "image/webp",
-          cacheControl: "private, max-age=86400",
-        },
-      });
+    const job = await readGeneration(uid, id);
+    if (job.storageProvider === "provider") {
+      // A bounded thumbnail fits safely below Firestore's document size limit.
+      if (thumbnail.length > MAX_THUMBNAIL_BYTES)
+        throw new AiError(
+          "THUMBNAIL_TOO_LARGE",
+          "The image preview is too large. Crop to one object and retry.",
+          413,
+        );
+      await ref.update({ thumbnailBase64: thumbnail.toString("base64") });
+    } else {
+      await getAdmin()
+        .bucket.file(assetPath(uid, id, "thumbnail.webp"))
+        .save(thumbnail, {
+          resumable: false,
+          metadata: {
+            contentType: "image/webp",
+            cacheControl: "private, max-age=86400",
+          },
+        });
+    }
     // Both requests start together; each independently records real progress.
     const results = await Promise.allSettled([
       analyzeConcept(image).then(async (concept: VisionConcept) => {
@@ -264,15 +289,21 @@ export async function advanceGeneration(uid: string, id: string) {
       progress: 100,
     });
     const bytes = await downloadModel(mesh.modelUrl);
-    await getAdmin()
-      .bucket.file(assetPath(uid, id, "model.glb"))
-      .save(bytes, {
-        resumable: false,
-        metadata: {
-          contentType: "model/gltf-binary",
-          cacheControl: "private, max-age=86400",
-        },
+    if (job.storageProvider === "provider") {
+      await ref.update({
+        modelSha256: createHash("sha256").update(bytes).digest("hex"),
       });
+    } else {
+      await getAdmin()
+        .bucket.file(assetPath(uid, id, "model.glb"))
+        .save(bytes, {
+          resumable: false,
+          metadata: {
+            contentType: "model/gltf-binary",
+            cacheControl: "private, max-age=86400",
+          },
+        });
+    }
     await ref.update({
       status: "ready",
       modelUrl: assetUrl(uid, id, "model.glb"),

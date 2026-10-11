@@ -189,6 +189,23 @@ export async function startMesh(image: Buffer): Promise<string> {
   return task.task_id;
 }
 
+/** Read-only preflight; it never buys credits or starts a replacement task. */
+export async function requireMeshCredits() {
+  const account = await tripoRequest("/user/balance");
+  if (typeof account.balance !== "number" || !Number.isFinite(account.balance))
+    throw new AiError(
+      "MESH_SERVICE_FAILED",
+      "The 3D service could not verify availability. Try again later.",
+      503,
+    );
+  if (account.balance <= 0)
+    throw new AiError(
+      "MESH_CREDITS_REQUIRED",
+      "AI 3D scans are unavailable because the Tripo API account has no credits. Contact the project owner; you can still add manual anchors.",
+      503,
+    );
+}
+
 export async function getMesh(taskId: string) {
   const task = await tripoRequest(`/task/${encodeURIComponent(taskId)}`);
   if (typeof task.status !== "string")
@@ -305,12 +322,17 @@ export function validateGlb(bytes: Buffer) {
     );
 }
 
-export async function downloadModel(value: unknown): Promise<Buffer> {
+export async function downloadModel(
+  value: unknown,
+  signal?: AbortSignal,
+): Promise<Buffer> {
   const url = validateProviderAssetUrl(value);
   const response = await fetch(url, {
     cache: "no-store",
     redirect: "error",
-    signal: AbortSignal.timeout(35000),
+    signal: signal
+      ? AbortSignal.any([signal, AbortSignal.timeout(35000)])
+      : AbortSignal.timeout(35000),
   });
   if (
     !response.ok ||

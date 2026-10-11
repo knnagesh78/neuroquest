@@ -5,6 +5,7 @@ const mock = vi.hoisted(() => ({
   storage: vi.fn(),
   prepareImage: vi.fn(),
   keys: vi.fn(),
+  credits: vi.fn(),
   create: vi.fn(),
   prepareJob: vi.fn(),
   claim: vi.fn(),
@@ -22,6 +23,7 @@ vi.mock("@/lib/server/firebase-admin", async (importOriginal) => ({
 vi.mock("@/lib/server/ai-providers", () => ({
   prepareScanImage: mock.prepareImage,
   requireProviderKeys: mock.keys,
+  requireMeshCredits: mock.credits,
 }));
 vi.mock("@/lib/server/ai-jobs", () => ({
   createGeneration: mock.create,
@@ -118,6 +120,34 @@ describe("authenticated generation route", () => {
     mock.create.mockResolvedValue({ created: false, job });
     expect((await POST(request())).status).toBe(202);
     expect(mock.after).not.toHaveBeenCalled();
+    expect(mock.credits).not.toHaveBeenCalled();
+  });
+  it("rejects an empty Tripo account without consuming quota or starting either provider", async () => {
+    mock.read.mockRejectedValueOnce(
+      new AiError("SCAN_NOT_FOUND", "Not found", 404),
+    );
+    mock.credits.mockRejectedValueOnce(
+      new AiError(
+        "MESH_CREDITS_REQUIRED",
+        "No 3D credits; manual anchors remain available.",
+        503,
+      ),
+    );
+    const response = await POST(request());
+    expect(response.status).toBe(503);
+    expect(await response.json()).toMatchObject({
+      code: "MESH_CREDITS_REQUIRED",
+    });
+    expect(mock.create).not.toHaveBeenCalled();
+    expect(mock.after).not.toHaveBeenCalled();
+  });
+  it("checks a new task's availability before reserving quota", async () => {
+    mock.read.mockRejectedValueOnce(
+      new AiError("SCAN_NOT_FOUND", "Not found", 404),
+    );
+    expect((await POST(request())).status).toBe(202);
+    expect(mock.credits).toHaveBeenCalledOnce();
+    expect(mock.create).toHaveBeenCalledOnce();
   });
   it("rejects an unverified login before processing an image or charging quota", async () => {
     mock.auth.mockRejectedValue(

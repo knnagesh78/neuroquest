@@ -358,6 +358,12 @@ export default function AiScan({
           {job.status === "ready" && job.modelUrl && (
             <AiModelPreview modelUrl={job.modelUrl} color={color} />
           )}
+          {job.status === "ready" && job.modelHosting === "provider" && (
+            <p>
+              Tripo hosts this model. Future downloads depend on its
+              availability; your saved study notes stay in your account.
+            </p>
+          )}
           {(job.status === "ready" || job.status === "failed") && (
             <button
               className="drawer-secondary"

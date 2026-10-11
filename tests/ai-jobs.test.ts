@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createHash } from "node:crypto";
 vi.mock("server-only", () => ({}));
 const mocks = vi.hoisted(() => ({
   admin: vi.fn(),
@@ -95,6 +96,7 @@ beforeEach(() => {
   vi.setSystemTime(new Date("2026-10-11T12:00:00Z"));
   vi.stubEnv("AI_DAILY_USER_LIMIT", "3");
   vi.stubEnv("AI_DAILY_GLOBAL_LIMIT", "50");
+  vi.stubEnv("AI_MODEL_STORAGE", "firebase");
   memory = database();
   memory.values.set("users/alice/workspace/room_anatomy", { id: "anatomy" });
   mocks.admin.mockReturnValue(memory);
@@ -159,6 +161,8 @@ describe("durable scan ownership, quotas and recovery", () => {
     );
     await Promise.resolve();
     await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
     expect(mocks.start).toHaveBeenCalledOnce();
     expect(mocks.vision).toHaveBeenCalledOnce();
     resolveVision(concept);
@@ -197,6 +201,58 @@ describe("durable scan ownership, quotas and recovery", () => {
     expect(await claimGenerationPoll("alice", id)).toBe(false);
     vi.advanceTimersByTime(16000);
     expect(await claimGenerationPoll("alice", id)).toBe(true);
+  });
+  it("keeps provider-hosted jobs independent of later environment changes and hides private fields", async () => {
+    vi.stubEnv("AI_MODEL_STORAGE", "provider");
+    await createGeneration("alice", id, "anatomy");
+    vi.stubEnv("AI_MODEL_STORAGE", "firebase");
+    const thumbnail = Buffer.from("private thumbnail");
+    await prepareGeneration("alice", id, Buffer.from("image"), thumbnail);
+    mocks.mesh.mockResolvedValue({
+      status: "success",
+      progress: 100,
+      modelUrl: "https://assets.tripo3d.ai/expiring.glb",
+    });
+    await advanceGeneration("alice", id);
+    const ready = await readGeneration("alice", id);
+    expect(ready).toMatchObject({
+      status: "ready",
+      storageProvider: "provider",
+      thumbnailBase64: thumbnail.toString("base64"),
+      modelSha256: createHash("sha256").update("validated glb").digest("hex"),
+    });
+    expect(memory.files.size).toBe(0);
+    expect(publicJob(ready)).toMatchObject({
+      modelHosting: "provider",
+      modelUrl: `/api/anchors/assets/alice/${id}/model.glb`,
+    });
+    for (const field of [
+      "taskId",
+      "thumbnailBase64",
+      "modelSha256",
+      "storageProvider",
+    ])
+      expect(publicJob(ready)).not.toHaveProperty(field);
+  });
+  it("rejects invalid hosting configuration without reserving a scan", async () => {
+    vi.stubEnv("AI_MODEL_STORAGE", "typo");
+    await expect(
+      createGeneration("alice", id, "anatomy"),
+    ).rejects.toMatchObject({ code: "INVALID_STORAGE_MODE" });
+    expect(memory.values.has("ai-usage/2026-10-11")).toBe(false);
+  });
+  it("bounds inline previews before starting either provider", async () => {
+    vi.stubEnv("AI_MODEL_STORAGE", "provider");
+    await createGeneration("alice", id, "anatomy");
+    await prepareGeneration(
+      "alice",
+      id,
+      Buffer.alloc(1),
+      Buffer.alloc(256 * 1024 + 1),
+    );
+    expect((await readGeneration("alice", id)).status).toBe("failed");
+    expect(mocks.start).not.toHaveBeenCalled();
+    expect(mocks.vision).not.toHaveBeenCalled();
   });
   it("records safe terminal errors and marks stalled startup jobs failed", async () => {
     await createGeneration("alice", id, "anatomy");

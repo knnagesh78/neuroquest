@@ -47,7 +47,7 @@ users/{firebase-auth-uid}/workspace/
 
 Rules allow reads and writes only when the signed-in UID matches the owner path. They validate supported fields, lengths, shapes, colors, coordinate bounds and review counts. Each write must advance the workspace revision atomically. Other database paths are denied. A stale device cannot overwrite a newer save: the app offers a download of current notes and a deliberate reload of the cloud version.
 
-Notes use **Cloud Firestore**, not file/object storage. The supplied Firebase Storage bucket is configured but not initialized by this release, which has no attachments or upload control. `storage.rules` denies all file access; deploy it only to a bucket dedicated to this app, after reviewing any existing files and integrations. Cloud Storage may require a billing-plan upgrade; do not enable billing just to use text anchors in Firestore. Consult [Firebase's current Storage requirements](https://firebase.google.com/docs/storage/faqs-storage-changes-announced-sept-2024).
+Notes use **Cloud Firestore**, not file/object storage. AI image scans support two hosting modes: `AI_MODEL_STORAGE=provider` uses Tripo's hosted models and Firestore thumbnails without a Firebase Storage bucket; `firebase` uses private bucket storage. Direct browser access to model files is denied; authenticated server routes verify the owner. Cloud Storage may require a billing-plan upgrade; text anchors and provider hosting do not require enabling Firebase billing. See [AI_3D_SETUP.md](./AI_3D_SETUP.md) for hosting limits and [Firebase's current Storage requirements](https://firebase.google.com/docs/storage/faqs-storage-changes-announced-sept-2024).
 
 ## 3. Run locally
 
@@ -79,7 +79,7 @@ Before deploying this security cleanup:
 
 The six Firebase values are public browser configuration and will be visible in the built JavaScript. They must never include service-account credentials or other server secrets. The optional `NEXT_PUBLIC_FIREBASE_APPCHECK_SITE_KEY` is also public; set it only after registering reCAPTCHA v3 for Firebase App Check. App Check is not active just because the code supports it: register the site key and enable enforcement in Firebase before relying on it.
 
-For local production preview, use `npm run build` followed by `npm start`. The AI image-to-3D feature also needs private server credentials and a Storage bucket; follow [AI_3D_SETUP.md](./AI_3D_SETUP.md).
+For local production preview, use `npm run build` followed by `npm start`. The AI image-to-3D feature also needs private server credentials and either provider hosting or a private Storage bucket; follow [AI_3D_SETUP.md](./AI_3D_SETUP.md).
 
 ### Hosting alternatives
 
