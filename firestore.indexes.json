@@ -1,6 +1,6 @@
 {
   "indexes": [],
   "fieldOverrides": [
-    { "collectionGroup": "workspace", "fieldPath": "content", "indexes": [] }
+    { "collectionGroup": "workspace", "fieldPath": "*", "indexes": [] }
   ]
 }

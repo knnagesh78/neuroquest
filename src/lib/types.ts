@@ -19,10 +19,7 @@ export interface MemoryAnchor {
   color: string;
   position: Vec3;
   shape: AnchorShape;
-  artifactType: "preset" | "ai-3d";
-  modelUrl?: string;
-  thumbnailUrl?: string;
-  isGenerating?: boolean;
+  artifactType: "preset";
   recallPrompt?: string;
   status: Retention;
   reviewCount: number;

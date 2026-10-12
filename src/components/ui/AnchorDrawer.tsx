@@ -19,7 +19,6 @@ import {
 import type { MemoryAnchor } from "@/lib/types";
 import { usePalaceStore } from "@/store/usePalaceStore";
 import Dialog from "./Dialog";
-import PrivateThumbnail from "./PrivateThumbnail";
 import {
   getAnchorDisplayColor,
   getAnchorDisplayColors,
@@ -117,17 +116,9 @@ function AnchorDetails({
           }
           aria-hidden="true"
         >
-          {anchor.artifactType === "ai-3d" && anchor.thumbnailUrl && visible ? (
-            <PrivateThumbnail
-              url={anchor.thumbnailUrl}
-              alt={`Source image for ${anchor.title}`}
-              className="ai-drawer-thumbnail"
-            />
-          ) : (
-            <div
-              className={`drawer-artifact-symbol drawer-artifact-symbol--${anchor.shape}`}
-            />
-          )}
+          <div
+            className={`drawer-artifact-symbol drawer-artifact-symbol--${anchor.shape}`}
+          />
           <span className="drawer-artifact-orbit" />
         </div>
 
@@ -176,7 +167,7 @@ function AnchorDetails({
             </span>
             <p>Bring the idea to mind before you reveal it.</p>
             {anchor.recallPrompt && (
-              <p className="ai-recall-question">{anchor.recallPrompt}</p>
+              <p className="drawer-recall-question">{anchor.recallPrompt}</p>
             )}
             <button
               className="drawer-primary"

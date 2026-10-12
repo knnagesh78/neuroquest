@@ -5,7 +5,6 @@ import {
   type PersistStorage,
 } from "zustand/middleware";
 import { INITIAL_ANCHORS, ROOMS } from "@/lib/data";
-import { ASSET_URL_PATTERN } from "@/lib/ai-anchor";
 import type {
   AnchorShape,
   AnchorUpdate,
@@ -21,7 +20,7 @@ import type {
 } from "@/lib/types";
 
 export const PALACE_STORAGE_KEY = "neuroquest-palace";
-export const PALACE_STORAGE_VERSION = 2;
+export const PALACE_STORAGE_VERSION = 3;
 export const MAX_ROOMS = 50;
 
 export interface PalaceState {
@@ -57,6 +56,21 @@ export interface PersistedPalaceState {
   mode: StudyMode;
   soundEnabled: boolean;
   effectsEnabled: boolean;
+}
+
+/** UI-only changes must not serialize every study note or schedule a cloud save. */
+export function workspaceChanged(
+  current: PersistedPalaceState,
+  previous: PersistedPalaceState,
+): boolean {
+  return (
+    current.rooms !== previous.rooms ||
+    current.anchors !== previous.anchors ||
+    current.activeRoomId !== previous.activeRoomId ||
+    current.mode !== previous.mode ||
+    current.soundEnabled !== previous.soundEnabled ||
+    current.effectsEnabled !== previous.effectsEnabled
+  );
 }
 
 const shapes = new Set<AnchorShape>([
@@ -195,35 +209,14 @@ function validateAnchor(
     return null;
 
   const artifactType = value.artifactType ?? "preset";
-  if (artifactType !== "preset" && artifactType !== "ai-3d") return null;
-  if (
-    value.isGenerating !== undefined &&
-    typeof value.isGenerating !== "boolean"
-  )
-    return null;
+  if (artifactType !== "preset") return null;
   if (
     value.recallPrompt !== undefined &&
     (typeof value.recallPrompt !== "string" || value.recallPrompt.length > 500)
   )
     return null;
-  for (const field of ["modelUrl", "thumbnailUrl"] as const) {
-    if (
-      value[field] !== undefined &&
-      (typeof value[field] !== "string" ||
-        !ASSET_URL_PATTERN.test(value[field]) ||
-        !value[field].endsWith(
-          field === "modelUrl" ? "/model.glb" : "/thumbnail.webp",
-        ))
-    )
-      return null;
-  }
-  if (
-    artifactType === "ai-3d" &&
-    !value.modelUrl &&
-    value.isGenerating !== true
-  )
-    return null;
 
+  // Retired scan anchors keep their notes, position and recall history as local shapes.
   return {
     id: value.id,
     roomId: value.roomId,
@@ -232,14 +225,7 @@ function validateAnchor(
     content: value.content,
     color: value.color,
     shape: value.shape as AnchorShape,
-    artifactType,
-    ...(typeof value.modelUrl === "string" ? { modelUrl: value.modelUrl } : {}),
-    ...(typeof value.thumbnailUrl === "string"
-      ? { thumbnailUrl: value.thumbnailUrl }
-      : {}),
-    ...(typeof value.isGenerating === "boolean"
-      ? { isGenerating: value.isGenerating }
-      : {}),
+    artifactType: "preset",
     ...(typeof value.recallPrompt === "string"
       ? { recallPrompt: value.recallPrompt.trim() }
       : {}),

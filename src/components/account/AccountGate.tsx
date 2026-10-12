@@ -29,13 +29,13 @@ import {
 } from "lucide-react";
 import { getFirebase } from "@/lib/firebase";
 import { accountError, usernameEmail } from "@/lib/account";
-import { syncModelCacheUser } from "@/lib/model-cache-session";
 import { SaveQueue } from "@/lib/save-queue";
 import {
   clearWorkspace,
   replaceWorkspace,
   usePalaceStore,
   workspaceData,
+  workspaceChanged,
   type PersistedPalaceState,
 } from "@/store/usePalaceStore";
 import { useAccountStore } from "@/store/useAccountStore";
@@ -78,7 +78,6 @@ export default function AccountGate() {
         unsubscribe = onAuthStateChanged(
           auth,
           (next) => {
-            void syncModelCacheUser(next?.uid ?? null).catch(() => {});
             clearWorkspace();
             useAccountStore.setState({
               username: next?.email?.split("@")[0] ?? "",
@@ -372,11 +371,8 @@ function WorkspaceSession({ user }: { user: User }) {
             conflict: false,
           });
           unsubscribe = usePalaceStore.subscribe((state, previous) => {
-            const data = workspaceData(state);
-            if (
-              JSON.stringify(data) !== JSON.stringify(workspaceData(previous))
-            )
-              saver?.update(data);
+            if (workspaceChanged(state, previous))
+              saver?.update(workspaceData(state));
           });
           setLoadError("");
           setLoaded(true);

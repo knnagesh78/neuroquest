@@ -661,6 +661,13 @@
   line-height: 1.6;
   margin: 8px 0;
 }
+.drawer-recall-question {
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--cream-200);
+  color: var(--ink) !important;
+  font-weight: 500;
+}
 .drawer-delete-confirm {
   background: #fff7eb;
   border: 1px solid #f7ead8;

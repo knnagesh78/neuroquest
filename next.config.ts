@@ -22,7 +22,7 @@ const nextConfig: NextConfig = {
                 },
                 {
                   key: "Permissions-Policy",
-                  value: "camera=(self), microphone=(), geolocation=()",
+                  value: "camera=(), microphone=(), geolocation=()",
                 },
                 ...(process.env.NODE_ENV === "production"
                   ? [

@@ -1,8 +1,0 @@
-rules_version = '2';
-service firebase.storage {
-  match /b/{bucket}/o {
-    // Generated AI files are written only by the server Admin SDK and streamed
-    // through authenticated owner-only API routes. Browser bucket access stays denied.
-    match /{allPaths=**} { allow read, write: if false; }
-  }
-}

@@ -13,6 +13,6 @@ or live credentials in a report.
 - Firebase web configuration is public and is not a server credential.
 - Firestore access is protected by `firestore.rules`; changes to those rules
   should be reviewed and tested before deployment.
-- Firebase Storage is closed until explicit per-user upload rules are added.
+- The app does not use Firebase Storage or private server credentials. Paid AI routes and provider integrations have been removed.
 - Never commit `.env.local`, service-account JSON files, private keys, or
   passwords. Use GitHub and Vercel environment settings for deployment config.

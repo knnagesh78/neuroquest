@@ -182,56 +182,28 @@ describe("Firestore ownership and cloud persistence", () => {
     await saveWorkspace(alice, "alice", null, original, 0);
     expect((await loadWorkspace(alice, "alice")).data.anchors).toEqual([]);
   });
-  it("persists AI fields and rejects external or cross-owner model URLs", async () => {
+  it("saves manual recall questions and rejects retired model fields", async () => {
     const original = validatePersistedState({});
+    original.anchors[0].recallPrompt = "How does it work?";
     await saveWorkspace(alice, "alice", null, original, 0);
-    const id = "b38a4860-fd01-4385-a579-ad255491693d";
-    const modelUrl = `/api/anchors/assets/alice/${id}/model.glb`;
-    const ai = {
-      ...original,
-      anchors: [
-        {
-          ...original.anchors[0],
-          artifactType: "ai-3d" as const,
-          modelUrl,
-          thumbnailUrl: `/api/anchors/assets/alice/${id}/thumbnail.webp`,
-          isGenerating: false,
-          recallPrompt: "How does it work?",
-        },
-      ],
-    };
-    await saveWorkspace(alice, "alice", original, ai, 1);
-    expect((await loadWorkspace(alice, "alice")).data.anchors).toEqual(
-      ai.anchors,
-    );
-    for (const url of [
-      "https://outside.example/model.glb",
-      modelUrl.replace("/alice/", "/bob/"),
-      modelUrl.replace("model.glb", "thumbnail.webp"),
+    expect(
+      (await loadWorkspace(alice, "alice")).data.anchors[0].recallPrompt,
+    ).toBe("How does it work?");
+    for (const extra of [
+      { modelUrl: "/api/anchors/assets/alice/retired/model.glb" },
+      { recallPrompt: "x".repeat(501) },
     ]) {
       await assertFails(
         saveWorkspace(
           alice,
           "alice",
-          ai,
-          { ...ai, anchors: [{ ...ai.anchors[0], modelUrl: url }] },
-          2,
+          original,
+          { ...original, anchors: [{ ...original.anchors[0], ...extra }] },
+          1,
         ),
       );
     }
-    await assertFails(
-      saveWorkspace(
-        alice,
-        "alice",
-        ai,
-        {
-          ...ai,
-          anchors: [{ ...ai.anchors[0], recallPrompt: "x".repeat(501) }],
-        },
-        2,
-      ),
-    );
-    expect((await loadWorkspace(alice, "alice")).revision).toBe(2);
+    expect((await loadWorkspace(alice, "alice")).revision).toBe(1);
   });
   it("denies browser reads and edits of server jobs and quota documents", async () => {
     for (const path of [

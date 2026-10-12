@@ -47,7 +47,7 @@ users/{firebase-auth-uid}/workspace/
 
 Rules allow reads and writes only when the signed-in UID matches the owner path. They validate supported fields, lengths, shapes, colors, coordinate bounds and review counts. Each write must advance the workspace revision atomically. Other database paths are denied. A stale device cannot overwrite a newer save: the app offers a download of current notes and a deliberate reload of the cloud version.
 
-Notes use **Cloud Firestore**, not file/object storage. AI image scans support two hosting modes: `AI_MODEL_STORAGE=provider` uses Tripo's hosted models and Firestore thumbnails without a Firebase Storage bucket; `firebase` uses private bucket storage. Direct browser access to model files is denied; authenticated server routes verify the owner. Cloud Storage may require a billing-plan upgrade; text anchors and provider hosting do not require enabling Firebase billing. See [AI_3D_SETUP.md](./AI_3D_SETUP.md) for hosting limits and [Firebase's current Storage requirements](https://firebase.google.com/docs/storage/faqs-storage-changes-announced-sept-2024).
+Notes use **Cloud Firestore**, not file/object storage. The app does not use Firebase Storage or any external AI provider. Only public Firebase browser configuration is required.
 
 ## 3. Run locally
 
@@ -79,11 +79,11 @@ Before deploying this security cleanup:
 
 The six Firebase values are public browser configuration and will be visible in the built JavaScript. They must never include service-account credentials or other server secrets. The optional `NEXT_PUBLIC_FIREBASE_APPCHECK_SITE_KEY` is also public; set it only after registering reCAPTCHA v3 for Firebase App Check. App Check is not active just because the code supports it: register the site key and enable enforcement in Firebase before relying on it.
 
-For local production preview, use `npm run build` followed by `npm start`. The AI image-to-3D feature also needs private server credentials and either provider hosting or a private Storage bucket; follow [AI_3D_SETUP.md](./AI_3D_SETUP.md).
+For local production preview, use `npm run build` followed by `npm start`. The app needs only public Firebase browser configuration; no AI provider or Firebase Admin credentials are required.
 
 ### Hosting alternatives
 
-The AI generation and private model routes require a Next.js server. Use Vercel, Firebase App Hosting or a Node server. Plain static Firebase Hosting cannot execute these routes; `build:hosting` reports this limitation. Deploy rules separately with `npm run deploy:rules` after reviewing their scope. The Firebase CLI login manages deployment only; students still sign in with usernames and passwords.
+Use Vercel with the Next.js preset and `npm run build`. All application routes are static. Optional plain Firebase Hosting is supported through `npm run build:hosting`, which exports to `out`. Deploy rules and index exemptions separately with `npm run deploy:rules`. The Firebase CLI login manages deployment only; students still use usernames and passwords.
 
 Students open the published HTTPS address and select **Install NeuroQuest** from the sign-in screen, sidebar, or account panel:
 
@@ -91,7 +91,7 @@ Students open the published HTTPS address and select **Install NeuroQuest** from
 - iPhone/iPad: open in Safari, choose Share → Add to Home Screen → Add. Enable “Open as Web App” if offered.
 - Other browsers: the wizard explains the fallback; support depends on the browser and device. Embedded previews may not offer installation.
 
-The manifest includes regular and maskable icons, a home-screen name and standalone display mode. The service worker is registered **only in production**. It caches the public offline page and a bounded, owner-scoped set of private GLB models that is cleared on sign-out. It never caches notes, Firebase responses or account HTML. Internet is required for login and cloud saves. See the AI setup guide for offline model limits.
+The manifest includes regular and maskable icons, a home-screen name and standalone display mode. The production service worker caches only the public offline page and removes retired model caches. Notes, credentials, Firebase responses and account HTML are never cached. Internet is required for login and cloud saves.
 
 ## 5. Test without touching production
 

@@ -73,6 +73,34 @@ function ContextMonitor({ onLost }: { onLost: () => void }) {
   return null;
 }
 
+/** Keep GPU resources mounted, but stop rendering hidden/off-screen palaces. */
+function RenderActivity() {
+  const element = useThree((state) => state.gl.domElement);
+  const setFrameloop = useThree((state) => state.setFrameloop);
+  const invalidate = useThree((state) => state.invalidate);
+  useEffect(() => {
+    let inView = true;
+    const update = () => {
+      const active = !document.hidden && inView;
+      setFrameloop(active ? "always" : "never");
+      if (active) invalidate();
+    };
+    const observer = new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting;
+      update();
+    });
+    observer.observe(element);
+    document.addEventListener("visibilitychange", update);
+    update();
+    return () => {
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", update);
+      setFrameloop("always");
+    };
+  }, [element, setFrameloop, invalidate]);
+  return null;
+}
+
 function Pillar({
   position,
   height,
@@ -348,9 +376,11 @@ function RoomMotion({
 function World({
   reducedMotion,
   onContextLost,
+  compact,
 }: {
   reducedMotion: boolean;
   onContextLost: () => void;
+  compact: boolean;
 }) {
   const width = useThree((state) => state.size.width);
   const height = useThree((state) => state.size.height);
@@ -389,7 +419,7 @@ function World({
         color="#fff5eb"
         intensity={isRecall ? 0.3 : 2.3}
         castShadow
-        shadow-mapSize={[1024, 1024]}
+        shadow-mapSize={compact ? [512, 512] : [1024, 1024]}
         shadow-camera-left={-12}
         shadow-camera-right={12}
         shadow-camera-top={12}
@@ -432,10 +462,12 @@ function World({
           index={index}
           displayColor={displayColors[index]}
           reducedMotion={reducedMotion}
+          ambientGlow={roomAnchors.length <= 12}
         />
       ))}
       <CameraController reducedMotion={reducedMotion} />
       <ContextMonitor onLost={onContextLost} />
+      <RenderActivity />
       <PostProcessing />
     </>
   );
@@ -600,6 +632,7 @@ function Scene() {
             <Suspense fallback={null}>
               <World
                 reducedMotion={reducedMotion}
+                compact={isTouchDevice}
                 onContextLost={() => setContextLost(true)}
               />
             </Suspense>

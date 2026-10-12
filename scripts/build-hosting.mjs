@@ -1,3 +1,13 @@
-throw new Error(
-  "AI 3D scans require a Next.js server. Deploy with Vercel or Firebase App Hosting using npm run build. Plain Firebase static Hosting cannot execute the authenticated AI and model routes.",
+import { spawnSync } from "node:child_process";
+import { createRequire } from "node:module";
+const require = createRequire(import.meta.url);
+const result = spawnSync(
+  process.execPath,
+  [require.resolve("next/dist/bin/next"), "build"],
+  {
+    stdio: "inherit",
+    env: { ...process.env, NEUROQUEST_STATIC_EXPORT: "true" },
+  },
 );
+if (result.error) throw result.error;
+process.exitCode = result.status ?? 1;

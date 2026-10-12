@@ -15,11 +15,13 @@ function worker(fetch = vi.fn().mockResolvedValue("network response")) {
         "other-app",
         "neuroquest-offline-v0",
         "neuroquest-offline-v1",
+        "neuroquest-models-v1-retired-user",
       ]),
     delete: vi.fn().mockResolvedValue(true),
   };
   runInNewContext(readFileSync("public/sw.js", "utf8"), {
     self: {
+      skipWaiting: vi.fn(),
       location: { origin: "https://neuroquest.example" },
       addEventListener: (name: string, handler: (event: unknown) => void) => {
         listeners[name] = handler;
@@ -96,8 +98,12 @@ describe("install and offline privacy", () => {
       },
     });
     await activated;
-    expect(caches.delete).toHaveBeenCalledTimes(2);
+    expect(caches.delete).toHaveBeenCalledTimes(3);
     expect(caches.delete).toHaveBeenCalledWith("neuroquest-offline-v0");
     expect(caches.delete).toHaveBeenCalledWith("neuroquest-offline-v1");
+    expect(caches.delete).toHaveBeenCalledWith(
+      "neuroquest-models-v1-retired-user",
+    );
+    expect(caches.delete).not.toHaveBeenCalledWith("other-app");
   });
 });
