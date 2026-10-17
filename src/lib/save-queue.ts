@@ -2,6 +2,8 @@
 export class SaveQueue<T> {
   private current: T;
   private saved: T | null;
+  private currentJSON: string | undefined;
+  private savedJSON: string | undefined;
   private revision: number;
   private timer: ReturnType<typeof setTimeout> | undefined;
   private running: Promise<void> | undefined;
@@ -24,19 +26,25 @@ export class SaveQueue<T> {
   ) {
     this.current = data;
     this.saved = saved;
+    this.currentJSON = JSON.stringify(data);
+    this.savedJSON = data === saved ? this.currentJSON : JSON.stringify(saved);
     this.revision = revision;
   }
 
   get dirty() {
-    return JSON.stringify(this.current) !== JSON.stringify(this.saved);
+    return this.currentJSON !== this.savedJSON;
   }
 
   update(data: T) {
     if (this.stopped) return;
     this.current = data;
-    if (!this.dirty) return;
-    if (!this.failure) this.notify("saving");
+    this.currentJSON = JSON.stringify(data);
     clearTimeout(this.timer);
+    if (!this.dirty) {
+      if (!this.running && !this.failure) this.notify("saved");
+      return;
+    }
+    if (!this.failure) this.notify("saving");
     if (!this.failure)
       this.timer = setTimeout(() => {
         void this.flush().catch(() => {});
@@ -60,12 +68,14 @@ export class SaveQueue<T> {
       try {
         while (this.dirty && !this.stopped) {
           const snapshot = this.current;
+          const snapshotJSON = this.currentJSON;
           const revision = await this.write(
             this.saved,
             snapshot,
             this.revision,
           );
           this.saved = snapshot;
+          this.savedJSON = snapshotJSON;
           this.revision = revision;
         }
         if (!this.stopped) this.notify("saved");

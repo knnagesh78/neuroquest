@@ -44,6 +44,7 @@ export function exportWorkspace() {
   const { rooms, anchors } = usePalaceStore.getState();
   downloadNotes({
     application: "NeuroQuest",
+    version: 1,
     exportedAt: new Date().toISOString(),
     rooms,
     anchors,

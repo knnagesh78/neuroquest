@@ -2,6 +2,48 @@ import { describe, expect, it, vi } from "vitest";
 import { SaveQueue } from "@/lib/save-queue";
 
 describe("cloud save lifecycle", () => {
+  it("clears pending saves when an edit is undone before the debounce", async () => {
+    vi.useFakeTimers();
+    try {
+      const write = vi.fn();
+      const notify = vi.fn();
+      const queue = new SaveQueue<string>("initial", "initial", 1, write, notify);
+      queue.update("edited");
+      expect(queue.dirty).toBe(true);
+      queue.update("initial");
+      expect(queue.dirty).toBe(false);
+      expect(notify).toHaveBeenLastCalledWith("saved");
+      await vi.runAllTimersAsync();
+      expect(write).not.toHaveBeenCalled();
+      queue.stop();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+  it("keeps an undo made during a save dirty until it is also saved", async () => {
+    let finish!: (revision: number) => void;
+    const write = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise<number>((resolve) => {
+            finish = resolve;
+          }),
+      )
+      .mockResolvedValueOnce(3);
+    const queue = new SaveQueue<string>("initial", "initial", 1, write, vi.fn());
+    queue.update("edited");
+    const saving = queue.flush();
+    queue.update("initial");
+    finish(2);
+    await saving;
+    expect(write.mock.calls).toEqual([
+      ["initial", "edited", 1],
+      ["edited", "initial", 2],
+    ]);
+    expect(queue.dirty).toBe(false);
+    queue.stop();
+  });
   it("serializes edits made while a previous save is in flight", async () => {
     let finish!: (revision: number) => void;
     const write = vi

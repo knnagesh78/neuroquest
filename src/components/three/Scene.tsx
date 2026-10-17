@@ -80,20 +80,26 @@ function RenderActivity() {
   const invalidate = useThree((state) => state.invalidate);
   useEffect(() => {
     let inView = true;
+    let wasActive = true;
     const update = () => {
       const active = !document.hidden && inView;
+      if (active === wasActive) return;
+      wasActive = active;
       setFrameloop(active ? "always" : "never");
       if (active) invalidate();
     };
-    const observer = new IntersectionObserver(([entry]) => {
-      inView = entry.isIntersecting;
-      update();
-    });
-    observer.observe(element);
+    const observer =
+      typeof IntersectionObserver === "undefined"
+        ? null
+        : new IntersectionObserver(([entry]) => {
+            inView = entry.isIntersecting;
+            update();
+          });
+    observer?.observe(element);
     document.addEventListener("visibilitychange", update);
     update();
     return () => {
-      observer.disconnect();
+      observer?.disconnect();
       document.removeEventListener("visibilitychange", update);
       setFrameloop("always");
     };
@@ -621,7 +627,9 @@ function Scene() {
               toneMapping: ACESFilmicToneMapping,
               toneMappingExposure: 1.05,
             }}
-            fallback={fallback}
+            fallback={
+              <p>Use the memory anchor list to explore and study your notes.</p>
+            }
             onCreated={({ gl }) => {
               gl.setClearColor(new Color("#211916"));
               gl.domElement.style.cursor = "grab";

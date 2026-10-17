@@ -208,7 +208,7 @@ function AnchorDetails({
             <input
               id="anchor-edit-title"
               value={editTitle}
-              maxLength={80}
+              maxLength={100}
               required
               onChange={(event) => setEditTitle(event.target.value)}
             />
@@ -218,7 +218,7 @@ function AnchorDetails({
             <textarea
               id="anchor-edit-content"
               value={editContent}
-              maxLength={10000}
+              maxLength={30000}
               required
               rows={12}
               onChange={(event) => setEditContent(event.target.value)}

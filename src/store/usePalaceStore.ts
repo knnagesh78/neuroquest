@@ -209,7 +209,7 @@ function validateAnchor(
     return null;
 
   const artifactType = value.artifactType ?? "preset";
-  if (artifactType !== "preset") return null;
+  if (artifactType !== "preset" && artifactType !== "ai-3d") return null;
   if (
     value.recallPrompt !== undefined &&
     (typeof value.recallPrompt !== "string" || value.recallPrompt.length > 500)

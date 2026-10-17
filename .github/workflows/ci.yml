@@ -1,0 +1,43 @@
+name: App checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_PUBLIC_FIREBASE_API_KEY: fake-ci-key
+      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: demo-neuroquest.firebaseapp.com
+      NEXT_PUBLIC_FIREBASE_PROJECT_ID: demo-neuroquest
+      NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: demo-neuroquest.firebasestorage.app
+      NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "123456789"
+      NEXT_PUBLIC_FIREBASE_APP_ID: "1:123456789:web:ci"
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run test:rules
+      - run: npm audit --omit=dev --audit-level=moderate
+      - run: npm run build

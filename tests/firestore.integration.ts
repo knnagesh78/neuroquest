@@ -187,7 +187,9 @@ describe("Firestore ownership and cloud persistence", () => {
     original.anchors[0].recallPrompt = "How does it work?";
     await saveWorkspace(alice, "alice", null, original, 0);
     expect(
-      (await loadWorkspace(alice, "alice")).data.anchors[0].recallPrompt,
+      (await loadWorkspace(alice, "alice")).data.anchors.find(
+        (anchor) => anchor.id === original.anchors[0].id,
+      )?.recallPrompt,
     ).toBe("How does it work?");
     for (const extra of [
       { modelUrl: "/api/anchors/assets/alice/retired/model.glb" },
@@ -204,6 +206,50 @@ describe("Firestore ownership and cloud persistence", () => {
       );
     }
     expect((await loadWorkspace(alice, "alice")).revision).toBe(1);
+  });
+  it("loads retired models as editable shapes while keeping their study notes", async () => {
+    const original = validatePersistedState({});
+    const anchor = original.anchors[0];
+    await saveWorkspace(alice, "alice", null, original, 0);
+    await env.withSecurityRulesDisabled(async (context) => {
+      await setDoc(
+        doc(
+          context.firestore() as unknown as Firestore,
+          "users",
+          "alice",
+          "workspace",
+          `anchor_${anchor.id}`,
+        ),
+        {
+          ...anchor,
+          artifactType: "ai-3d",
+          modelUrl: "/retired-model.glb",
+          isGenerating: false,
+        },
+      );
+    });
+    const loaded = await loadWorkspace(alice, "alice");
+    const migrated = loaded.data.anchors.find((item) => item.id === anchor.id)!;
+    expect(migrated).toMatchObject({
+      title: anchor.title,
+      content: anchor.content,
+      artifactType: "preset",
+    });
+    expect(migrated).not.toHaveProperty("modelUrl");
+    const edited = {
+      ...loaded.data,
+      anchors: loaded.data.anchors.map((item) =>
+        item.id === anchor.id ? { ...item, title: "My retained notes" } : item,
+      ),
+    };
+    await saveWorkspace(alice, "alice", loaded.data, edited, loaded.revision);
+    expect(
+      (
+        await getDoc(
+          doc(alice, "users", "alice", "workspace", `anchor_${anchor.id}`),
+        )
+      ).data(),
+    ).toMatchObject({ title: "My retained notes", artifactType: "preset" });
   });
   it("denies browser reads and edits of server jobs and quota documents", async () => {
     for (const path of [

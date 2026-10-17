@@ -393,7 +393,9 @@ describe("custom memory palaces", () => {
       soundEnabled: true,
       effectsEnabled: false,
     });
-    expect(JSON.parse(values.get(PALACE_STORAGE_KEY)!).version).toBe(2);
+    expect(JSON.parse(values.get(PALACE_STORAGE_KEY)!).version).toBe(
+      PALACE_STORAGE_VERSION,
+    );
   });
 
   it("restores only valid distinct rooms and removes orphaned anchors", () => {

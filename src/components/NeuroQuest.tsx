@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDownToLine,
   ArrowRight,
@@ -341,22 +341,29 @@ function SearchDialog({
   onNavigate: () => void;
 }) {
   const [query, setQuery] = useState("");
+  const deferredQuery = useDeferredValue(query.trim().toLowerCase());
   const anchors = usePalaceStore((s) => s.anchors);
   const rooms = usePalaceStore((s) => s.rooms);
   const setRoom = usePalaceStore((s) => s.setRoom);
   const select = usePalaceStore((s) => s.selectAnchor);
   const mode = usePalaceStore((s) => s.mode);
-  const matches = useMemo(
+  const searchIndex = useMemo(
     () =>
-      anchors
-        .filter((a) =>
-          `${a.title} ${a.content} ${a.category}`
-            .toLowerCase()
-            .includes(query.toLowerCase()),
-        )
-        .slice(0, 15),
-    [anchors, query],
+      anchors.map((anchor) => ({
+        anchor,
+        text: `${anchor.title} ${anchor.category} ${anchor.content}`.toLowerCase(),
+      })),
+    [anchors],
   );
+  const matches = useMemo(() => {
+    if (mode === "recall") return [];
+    const results: MemoryAnchor[] = [];
+    for (const item of searchIndex) {
+      if (item.text.includes(deferredQuery)) results.push(item.anchor);
+      if (results.length === 15) break;
+    }
+    return results;
+  }, [searchIndex, deferredQuery, mode]);
   return (
     <WorkspaceDialog title="Find a thought" onClose={onClose}>
       <label className="search-field">
@@ -370,7 +377,10 @@ function SearchDialog({
         />
         <kbd>ESC</kbd>
       </label>
-      <div className="search-results">
+      <div
+        className="search-results"
+        aria-busy={query.trim().toLowerCase() !== deferredQuery}
+      >
         {mode === "recall" ? (
           <p className="empty-state">
             Finish your recall challenge to search your notes. You’ve got this.
@@ -409,31 +419,6 @@ function SettingsDialog({ onClose }: { onClose: () => void }) {
   const toggleEffects = usePalaceStore((s) => s.toggleEffects);
   const sound = usePalaceStore((s) => s.soundEnabled);
   const toggleSound = usePalaceStore((s) => s.toggleSound);
-  const exportPalace = () => {
-    const { anchors, rooms } = usePalaceStore.getState();
-    const blob = new Blob(
-      [
-        JSON.stringify(
-          {
-            application: "NeuroQuest",
-            version: 1,
-            exportedAt: new Date().toISOString(),
-            rooms,
-            anchors,
-          },
-          null,
-          2,
-        ),
-      ],
-      { type: "application/json" },
-    );
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "neuroquest-memory-palaces.json";
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  };
   return (
     <WorkspaceDialog title="Make this space yours" onClose={onClose}>
       <p className="dialog-intro">Little adjustments for a better headspace.</p>
@@ -481,7 +466,7 @@ function SettingsDialog({ onClose }: { onClose: () => void }) {
             whenever you like.
           </small>
         </span>
-        <button className="secondary-button" onClick={exportPalace}>
+        <button className="secondary-button" onClick={exportWorkspace}>
           <ArrowDownToLine size={16} /> Export all palaces
         </button>
       </div>
