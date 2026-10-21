@@ -26,7 +26,7 @@ Students see only **Username** and **Password**, with a separate **Create accoun
 
 **Recovery limitation:** username-only accounts cannot receive password-reset or verification emails. Users must retain their password. Do not enable mandatory email verification for these accounts. An administrator-assisted recovery process needs a separate way to verify ownership before resetting an account; no insecure recovery bypass is included. Passwords are handled by the Firebase Auth SDK and never written to Firestore, exports, logs, or application state outside the sign-in form.
 
-The login lasts for the current browser tab session. Closing the tab normally ends it; signing out explicitly is best on shared college computers. No “remember me” option is enabled.
+Firebase keeps the login on this device across closing a tab, returning from the phone home screen, and reopening the PWA. Use **Save & sign out** on shared college computers. The app never stores the password itself; Firebase manages its persisted session token.
 
 ## 2. Create the cloud database
 

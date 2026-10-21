@@ -4,7 +4,7 @@ import {
   connectAuthEmulator,
   getAuth,
   setPersistence,
-  browserSessionPersistence,
+  browserLocalPersistence,
 } from "firebase/auth";
 
 function requiredPublicConfig(name: string, value: string | undefined): string {
@@ -60,8 +60,9 @@ function initializeServices() {
       disableWarnings: true,
     });
   }
-  // A college/shared computer should not remain logged in after the tab is closed.
-  const ready = setPersistence(auth, browserSessionPersistence);
+  // Firebase persists the session token, never the student's password or notes.
+  // Returning from the phone home screen or reopening the PWA keeps the login.
+  const ready = setPersistence(auth, browserLocalPersistence);
   return { app, auth, ready, appCheck };
 }
 

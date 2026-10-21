@@ -48,6 +48,7 @@ import {
 import Navigation, { type WorkspacePage } from "./ui/Navigation";
 import ModeSwitcher from "./ui/ModeSwitcher";
 import RoomIcon from "./ui/RoomIcon";
+import { useBackDismiss, useWorkspaceNavigation } from "./ui/useAppNavigation";
 import {
   AccountButton,
   SyncStatus,
@@ -304,6 +305,7 @@ function WorkspaceDialog({
   onClose: () => void;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  useBackDismiss(true, onClose);
   useEffect(() => {
     const dialog = ref.current;
     dialog?.showModal();
@@ -794,7 +796,7 @@ function MemoryGuide({ onStart }: { onStart: () => void }) {
 }
 
 export default function NeuroQuest() {
-  const [page, setPage] = useState<WorkspacePage>("palace");
+  const { page, navigateTo } = useWorkspaceNavigation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dialog, setDialog] = useState<
     "search" | "settings" | "controls" | "create-palace" | null
@@ -844,14 +846,14 @@ export default function NeuroQuest() {
         );
       }
     };
-    const palaceHandler = () => setPage("palace");
+    const palaceHandler = () => navigateTo("palace");
     window.addEventListener("keydown", keyHandler);
     window.addEventListener("neuroquest:palace", palaceHandler);
     return () => {
       window.removeEventListener("keydown", keyHandler);
       window.removeEventListener("neuroquest:palace", palaceHandler);
     };
-  }, []);
+  }, [navigateTo]);
   useEffect(() => {
     if (!notice) return;
     const timeout = setTimeout(() => setNotice(""), 4000);
@@ -869,10 +871,6 @@ export default function NeuroQuest() {
     } catch {
       setNotice("Full-screen is unavailable in this preview.");
     }
-  };
-  const navigateTo = (nextPage: WorkspacePage) => {
-    setPage(nextPage);
-    window.scrollTo({ top: 0, behavior: "instant" });
   };
   return (
     <div className="app-shell">
@@ -1168,7 +1166,7 @@ export default function NeuroQuest() {
           ) : page === "profile" ? (
             <ProfilePage onNavigate={navigateTo} />
           ) : (
-            <MemoryGuide onStart={() => setPage("palace")} />
+            <MemoryGuide onStart={() => navigateTo("palace")} />
           )}
         </main>
       </div>
@@ -1188,7 +1186,7 @@ export default function NeuroQuest() {
       {dialog === "search" && (
         <SearchDialog
           onClose={() => setDialog(null)}
-          onNavigate={() => setPage("palace")}
+          onNavigate={() => navigateTo("palace")}
         />
       )}
       {dialog === "settings" && (

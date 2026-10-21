@@ -19,8 +19,10 @@ import { useEffect, useRef } from "react";
 import RoomIcon from "./RoomIcon";
 import { useAccountStore } from "@/store/useAccountStore";
 import { getRoomDisplayColor } from "@/lib/room-color";
+import { useBackDismiss } from "./useAppNavigation";
+import type { WorkspacePage } from "@/lib/navigation";
 
-export type WorkspacePage = "palace" | "insights" | "guide" | "profile";
+export type { WorkspacePage } from "@/lib/navigation";
 type Props = {
   page: WorkspacePage;
   onNavigate: (page: WorkspacePage) => void;
@@ -40,6 +42,7 @@ export default function Navigation({
   const username = useAccountStore((s) => s.username);
   const activeRoomId = usePalaceStore((s) => s.activeRoomId);
   const setRoom = usePalaceStore((s) => s.setRoom);
+  useBackDismiss(mobileOpen, onClose);
   const go = (next: WorkspacePage) => {
     onNavigate(next);
     onClose();
@@ -108,7 +111,15 @@ export default function Navigation({
         aria-modal={mobileOpen || undefined}
         aria-label={mobileOpen ? "Workspace navigation" : "Workspace"}
       >
-        <Link className="brand" href="/" aria-label="NeuroQuest home">
+        <Link
+          className="brand"
+          href="/"
+          aria-label="NeuroQuest home"
+          onClick={(event) => {
+            event.preventDefault();
+            go("palace");
+          }}
+        >
           <span className="brand-mark">
             <Box size={24} strokeWidth={1.8} />
           </span>

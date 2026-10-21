@@ -23,6 +23,8 @@ Use Node.js 22.12+ or 24 and npm.
 
 Create a palace, choose **Add memory anchor**, write your notes, choose a shape and color, and save. Wait for **Saved to your account** before closing the app. Drag to orbit, scroll or pinch to zoom, and select an artifact to study. Recall mode hides the title until you reveal it.
 
+Login stays active on this device when you return from the phone home screen or reopen the app. Use **Save & sign out** on shared computers. The phone/browser Back button dismisses an open panel first, then returns through your previous screens and palaces. At the first screen, Back can leave the app normally.
+
 Limits: 50 palaces and 300 anchors per account. Palace names must be unique and at most 48 characters. Anchor coordinates use X/Z from -6 to 6 and Y from 0 to 3. Mastery is self-rated; the app does not automatically grade answers.
 
 ## Stack and structure

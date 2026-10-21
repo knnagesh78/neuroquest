@@ -27,6 +27,7 @@ import {
 } from "@/store/usePalaceStore";
 import { useAccountStore } from "@/store/useAccountStore";
 import Dialog from "../ui/Dialog";
+import { useBackDismiss } from "../ui/useAppNavigation";
 
 export type SessionActions = {
   logout: () => Promise<void>;
@@ -112,6 +113,7 @@ export function AccountButton({
   const username = useAccountStore((s) => s.username);
   const [open, setOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  useBackDismiss(menuOpen, () => setMenuOpen(false));
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [legacy, setLegacy] = useState<PersistedPalaceState | null>(null);
@@ -437,7 +439,8 @@ export function AccountButton({
           {busy ? "Saving before sign-out…" : "Save & sign out"}
         </button>
         <small className="account-footnote">
-          For your privacy, closing this tab ends the login session.
+          You stay signed in on this device. Use Save &amp; sign out on shared
+          computers.
         </small>
       </Dialog>
     </>

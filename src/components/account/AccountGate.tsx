@@ -291,7 +291,7 @@ function LoginScreen() {
             <LockKeyhole size={15} />{" "}
             {create
               ? "Keep your password safe. Username-only accounts cannot receive password-reset emails."
-              : "Your palaces and progress belong to your account. You’ll be signed out when you close this tab."}
+              : "You’ll stay signed in on this device until you sign out. Always sign out on shared computers."}
           </p>
           <div className="auth-install">
             <span>Give your ideas a home on your device.</span>

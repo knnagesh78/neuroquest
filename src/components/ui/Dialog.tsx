@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
+import { useBackDismiss } from "./useAppNavigation";
 
 type DialogProps = {
   isOpen: boolean;
@@ -47,6 +48,7 @@ export default function Dialog({
   className = "",
   children,
 }: DialogProps) {
+  useBackDismiss(isOpen, onClose);
   const mounted = useSyncExternalStore(
     subscribeToClient,
     clientSnapshot,
