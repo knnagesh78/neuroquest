@@ -26,6 +26,7 @@ import {
   LockKeyhole,
   RefreshCw,
   ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 import { getFirebase } from "@/lib/firebase";
 import { accountError, usernameEmail } from "@/lib/account";
@@ -48,19 +49,40 @@ import {
 const NeuroQuest = dynamic(() => import("../NeuroQuest"), {
   ssr: false,
   loading: () => (
-    <StatusPage>
+    <StatusPage loading>
       <p role="status">Preparing your memory palace…</p>
     </StatusPage>
   ),
 });
 
-function StatusPage({ children }: { children: ReactNode }) {
+const AuthPalaceScene = dynamic(() => import("./AuthPalaceScene"), {
+  ssr: false,
+  loading: () => <div className="auth-palace-canvas auth-palace-loading" />,
+});
+
+function StatusPage({
+  children,
+  loading = false,
+}: {
+  children: ReactNode;
+  loading?: boolean;
+}) {
   return (
     <main className="account-status">
-      <span className="auth-brand-icon">
-        <Box size={32} />
+      <div className="account-status-visual" aria-hidden="true">
+        <span className="account-status-ring status-ring-one" />
+        <span className="account-status-ring status-ring-two" />
+        <span className="auth-brand-icon">
+          <Box size={32} />
+        </span>
+      </div>
+      <span className="account-status-wordmark">
+        NeuroQuest<span>.</span>
       </span>
       {children}
+      {loading && (
+        <span className="account-status-progress" aria-hidden="true" />
+      )}
     </main>
   );
 }
@@ -110,7 +132,7 @@ export default function AccountGate() {
     );
   if (user === undefined)
     return (
-      <StatusPage>
+      <StatusPage loading>
         <LoaderCircle className="spin" />
         <p>Opening your space…</p>
       </StatusPage>
@@ -153,46 +175,54 @@ function LoginScreen() {
           <span className="auth-brand-icon">
             <Box size={27} />
           </span>
-          NeuroQuest<span className="auth-beta">YOUR MEMORY, MAPPED</span>
+          <span>
+            NeuroQuest<span className="auth-logo-dot">.</span>
+          </span>
+          <span className="auth-beta">YOUR MEMORY, MAPPED</span>
         </Link>
         <div className="auth-story-body">
-          <span className="auth-eyebrow">A PLACE FOR EVERYTHING YOU KNOW</span>
+          <span className="auth-eyebrow">
+            <Sparkles size={14} /> A NEW WAY TO REMEMBER
+          </span>
           <h1>
-            Big ideas. <br />
-            Unforgettable <br />
-            <em>places.</em>
+            Give every idea <br />
+            <em>a place to live.</em>
           </h1>
           <p>
-            Turn your study notes into a world you can explore. Build a palace,
-            place an idea, and make it stick.
+            Build a world for what you learn. Place concepts in 3D, explore
+            them, and remember where they belong.
           </p>
           <div className="auth-world" aria-hidden="true">
-            <div className="auth-grid" />
-            <div className="auth-orbit orbit-one" />
-            <div className="auth-orbit orbit-two" />
-            <div className="auth-crystal">
-              <Box size={86} strokeWidth={1} />
-            </div>
-            <span className="auth-world-label label-one">01 · EXPLORE</span>
-            <span className="auth-world-label label-two">02 · REMEMBER</span>
-            <i className="auth-star star-one">✦</i>
-            <i className="auth-star star-two">✧</i>
+            <div className="auth-world-glow" />
+            <AuthPalaceScene />
+            <span className="auth-world-label label-one">
+              01 / CREATE A PALACE
+            </span>
+            <span className="auth-world-label label-two">
+              02 / PLACE AN IDEA
+            </span>
+            <span className="auth-world-caption">
+              YOUR KNOWLEDGE, IN A WORLD OF ITS OWN
+            </span>
           </div>
         </div>
         <span className="auth-story-footer">
-          <ShieldCheck size={17} /> Your knowledge. Your own private space.
+          <ShieldCheck size={17} /> A private space for every curious mind.
         </span>
       </section>
       <section className="auth-entry">
         <div className="auth-form-card">
-          <span className="auth-eyebrow">YOUR NEXT CHAPTER STARTS HERE</span>
-          <h2>
-            {create ? "Make room for your ideas." : "Welcome to your palace."}
+          <span className="auth-form-spark" aria-hidden="true">
+            <Sparkles size={18} />
+          </span>
+          <span className="auth-eyebrow">YOUR SPACE IS WAITING</span>
+          <h2 key={create ? "create" : "login"}>
+            {create ? "Start your journey." : "Welcome back."}
           </h2>
-          <p>
+          <p key={create ? "create-copy" : "login-copy"}>
             {create
-              ? "Create your personal learning space in a moment."
-              : "Sign in to pick up right where you left off."}
+              ? "Your first memory palace is just a moment away."
+              : "Step inside and pick up where you left off."}
           </p>
           <div className="auth-tabs" role="group" aria-label="Account action">
             <button
@@ -294,7 +324,7 @@ function LoginScreen() {
               : "You’ll stay signed in on this device until you sign out. Always sign out on shared computers."}
           </p>
           <div className="auth-install">
-            <span>Give your ideas a home on your device.</span>
+            <span>Take your palace with you.</span>
             <button
               onClick={() =>
                 window.dispatchEvent(new Event("neuroquest:install"))
@@ -434,7 +464,7 @@ function WorkspaceSession({ user }: { user: User }) {
   };
   if (!loaded)
     return (
-      <StatusPage>
+      <StatusPage loading={!loadError}>
         <h1>{loadError ? "Your palace is waiting" : "Finding your ideas…"}</h1>
         <p role={loadError ? "alert" : "status"}>
           {loadError || "Loading your private cloud workspace."}

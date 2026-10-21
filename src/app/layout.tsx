@@ -9,6 +9,7 @@ import "@fontsource/space-grotesk/700.css";
 import "./globals.css";
 import "@/components/ui/study-panels.css";
 import "@/components/account/account.css";
+import "@/components/account/login.css";
 
 export const metadata: Metadata = {
   title: "NeuroQuest — A place for everything you know",
