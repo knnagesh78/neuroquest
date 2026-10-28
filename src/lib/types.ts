@@ -1,13 +1,21 @@
 export type StudyMode = "explore" | "recall";
 export type Retention = "new" | "learning" | "mastered";
 export type Rating = "easy" | "hard" | "failed";
-export type AnchorShape =
-  | "crystal"
-  | "torus"
-  | "cube"
-  | "sphere"
-  | "pyramid"
-  | "knot";
+export const ANCHOR_SHAPES = [
+  "crystal",
+  "torus",
+  "cube",
+  "sphere",
+  "pyramid",
+  "knot",
+  "octahedron",
+  "dodecahedron",
+  "icosahedron",
+  "cylinder",
+  "capsule",
+  "star",
+] as const;
+export type AnchorShape = (typeof ANCHOR_SHAPES)[number];
 export type Vec3 = [number, number, number];
 
 export interface MemoryAnchor {

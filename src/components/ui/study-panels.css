@@ -198,6 +198,60 @@
 .drawer-artifact-symbol--pyramid {
   clip-path: polygon(50% 0, 100% 90%, 60% 100%, 0 80%);
 }
+.drawer-artifact-symbol--octahedron {
+  clip-path: polygon(50% 0, 96% 27%, 50% 100%, 4% 27%);
+}
+.drawer-artifact-symbol--dodecahedron {
+  clip-path: polygon(
+    50% 0,
+    84% 11%,
+    100% 42%,
+    90% 79%,
+    50% 100%,
+    10% 79%,
+    0 42%,
+    16% 11%
+  );
+}
+.drawer-artifact-symbol--icosahedron {
+  clip-path: polygon(
+    50% 0,
+    79% 10%,
+    100% 36%,
+    91% 73%,
+    68% 96%,
+    32% 96%,
+    9% 73%,
+    0 36%,
+    21% 10%
+  );
+}
+.drawer-artifact-symbol--cylinder {
+  clip-path: none;
+  width: 55px;
+  height: 68px;
+  border-radius: 50% / 11%;
+}
+.drawer-artifact-symbol--capsule {
+  clip-path: none;
+  width: 43px;
+  height: 70px;
+  border-radius: 50%;
+}
+.drawer-artifact-symbol--star {
+  clip-path: polygon(
+    50% 0,
+    61% 35%,
+    98% 35%,
+    68% 57%,
+    79% 94%,
+    50% 72%,
+    21% 94%,
+    32% 57%,
+    2% 35%,
+    39% 35%
+  );
+}
 .drawer-artifact-symbol--knot {
   border: 12px solid var(--anchor-color);
   background: transparent;
@@ -842,6 +896,9 @@
   grid-template-columns: repeat(6, 1fr);
   gap: 7px;
 }
+.add-shapes--anchors {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
 .add-shape {
   display: flex;
   flex-direction: column;
@@ -857,6 +914,14 @@
 }
 .add-shape span {
   font-size: 9px;
+}
+.add-shapes--anchors .add-shape {
+  min-height: 68px;
+  padding-inline: 6px;
+}
+.add-shapes--anchors .add-shape span {
+  text-align: center;
+  line-height: 1.2;
 }
 .add-shape:hover {
   border-color: #ecd9c1;
@@ -1056,6 +1121,9 @@
   }
   .add-shapes {
     gap: 5px;
+  }
+  .add-shapes--anchors {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .add-shape {
     padding: 11px 2px 9px;

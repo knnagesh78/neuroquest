@@ -3,7 +3,7 @@
 import { memo, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Edges, RoundedBox } from "@react-three/drei";
-import { Color, Vector2, type Group } from "three";
+import { Color, Shape, Vector2, type Group } from "three";
 import type { AnchorShape, Vec3 } from "@/lib/types";
 
 interface Props {
@@ -31,6 +31,20 @@ const cubeFaces: Array<{ position: Vec3; rotation: Vec3 }> = [
   { position: [0, -0.536, 0], rotation: [Math.PI / 2, 0, 0] },
 ];
 
+function createStarShape() {
+  const shape = new Shape();
+  for (let point = 0; point < 10; point += 1) {
+    const radius = point % 2 === 0 ? 0.76 : 0.34;
+    const angle = -Math.PI / 2 + (point * Math.PI) / 5;
+    const x = Math.cos(angle) * radius;
+    const y = Math.sin(angle) * radius;
+    if (point === 0) shape.moveTo(x, y);
+    else shape.lineTo(x, y);
+  }
+  shape.closePath();
+  return shape;
+}
+
 function AnchorArtifact({ shape, color, highlighted, reducedMotion }: Props) {
   const orbit = useRef<Group>(null);
   const hues = useMemo(() => {
@@ -42,6 +56,7 @@ function AnchorArtifact({ shape, color, highlighted, reducedMotion }: Props) {
       glow: base.clone().multiplyScalar(1.65),
     };
   }, [color]);
+  const starShape = useMemo(createStarShape, []);
 
   useFrame((_, delta) => {
     if (!orbit.current || reducedMotion) return;
@@ -262,6 +277,106 @@ function AnchorArtifact({ shape, color, highlighted, reducedMotion }: Props) {
               </mesh>
             </group>
           </group>
+        </group>
+      );
+    case "octahedron":
+      return (
+        <group rotation={[0.18, Math.PI / 4, -0.12]}>
+          <mesh castShadow>
+            <octahedronGeometry args={[0.76, 0]} />
+            {surface}
+            <Edges color={hues.edge} transparent opacity={0.55} />
+          </mesh>
+          <mesh position={[0, 0.83, 0]}>
+            <sphereGeometry args={[0.07, 16, 12]} />
+            {glow}
+          </mesh>
+        </group>
+      );
+    case "dodecahedron":
+      return (
+        <group rotation={[0.2, Math.PI / 5, -0.14]}>
+          <mesh castShadow>
+            <dodecahedronGeometry args={[0.72, 0]} />
+            {surface}
+            <Edges color={hues.edge} transparent opacity={0.42} />
+          </mesh>
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <torusGeometry args={[0.78, 0.018, 8, 64]} />
+            {glow}
+          </mesh>
+        </group>
+      );
+    case "icosahedron":
+      return (
+        <group rotation={[0.24, Math.PI / 6, 0.16]}>
+          <mesh castShadow>
+            <icosahedronGeometry args={[0.75, 0]} />
+            {surface}
+            <Edges color={hues.edge} transparent opacity={0.52} />
+          </mesh>
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <torusGeometry args={[0.9, 0.018, 8, 64]} />
+            {glow}
+          </mesh>
+        </group>
+      );
+    case "cylinder":
+      return (
+        <group rotation={[0.12, 0.18, 0.08]}>
+          <mesh castShadow>
+            <cylinderGeometry args={[0.53, 0.66, 1.18, 16]} />
+            {surface}
+          </mesh>
+          {[-0.43, 0.43].map((y) => (
+            <mesh
+              key={y}
+              position={[0, y, 0]}
+              rotation={[Math.PI / 2, 0, 0]}
+            >
+              <torusGeometry args={[0.59, 0.035, 8, 40]} />
+              {glow}
+            </mesh>
+          ))}
+        </group>
+      );
+    case "capsule":
+      return (
+        <group rotation={[0.14, 0.3, -0.22]}>
+          <mesh castShadow>
+            <capsuleGeometry args={[0.42, 0.72, 6, 24]} />
+            {surface}
+          </mesh>
+          <mesh position={[0, 0.25, 0.05]}>
+            <torusGeometry args={[0.39, 0.018, 8, 40]} />
+            {glow}
+          </mesh>
+        </group>
+      );
+    case "star":
+      return (
+        <group rotation={[0.12, 0.18, -0.08]} position={[0, 0, -0.09]}>
+          <mesh castShadow>
+            <extrudeGeometry
+              args={[
+                starShape,
+                {
+                  depth: 0.18,
+                  bevelEnabled: true,
+                  bevelSegments: 3,
+                  steps: 1,
+                  bevelSize: 0.045,
+                  bevelThickness: 0.045,
+                },
+              ]}
+            />
+            {surface}
+            <Edges color={hues.edge} transparent opacity={0.45} />
+          </mesh>
+          <mesh position={[0, 0, 0.2]}>
+            <sphereGeometry args={[0.11, 20, 14]} />
+            {glow}
+          </mesh>
         </group>
       );
   }

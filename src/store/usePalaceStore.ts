@@ -5,6 +5,7 @@ import {
   type PersistStorage,
 } from "zustand/middleware";
 import { INITIAL_ANCHORS, ROOMS } from "@/lib/data";
+import { ANCHOR_SHAPES } from "@/lib/types";
 import type {
   AnchorShape,
   AnchorUpdate,
@@ -73,14 +74,7 @@ export function workspaceChanged(
   );
 }
 
-const shapes = new Set<AnchorShape>([
-  "crystal",
-  "torus",
-  "cube",
-  "sphere",
-  "pyramid",
-  "knot",
-]);
+const shapes = new Set<AnchorShape>(ANCHOR_SHAPES);
 const statuses = new Set<Retention>(["new", "learning", "mastered"]);
 const ratings = new Set<Rating>(["easy", "hard", "failed"]);
 const roomIcons = new Set<RoomIcon>([

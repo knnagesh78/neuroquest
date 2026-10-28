@@ -5,10 +5,15 @@ import {
   Box,
   Check,
   Circle,
+  Cylinder,
   Diamond,
+  Hexagon,
   MapPin,
+  Octagon,
+  Pill,
   Plus,
   Sparkles,
+  Star,
   Triangle,
   X,
 } from "lucide-react";
@@ -28,6 +33,12 @@ const shapes: {
   { value: "sphere", label: "Sphere", icon: Circle },
   { value: "pyramid", label: "Pyramid", icon: Triangle },
   { value: "knot", label: "Knot", icon: Sparkles },
+  { value: "octahedron", label: "Octahedron", icon: Diamond },
+  { value: "dodecahedron", label: "Dodecahedron", icon: Hexagon },
+  { value: "icosahedron", label: "Icosahedron", icon: Octagon },
+  { value: "cylinder", label: "Cylinder", icon: Cylinder },
+  { value: "capsule", label: "Capsule", icon: Pill },
+  { value: "star", label: "Star", icon: Star },
 ];
 
 function openPosition(
@@ -225,7 +236,7 @@ function AddAnchorForm() {
             </div>
             <fieldset className="add-fieldset">
               <legend>Choose your artifact</legend>
-              <div className="add-shapes">
+              <div className="add-shapes add-shapes--anchors">
                 {shapes.map(({ value, label, icon: Icon }) => (
                   <button
                     key={value}
