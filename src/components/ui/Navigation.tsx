@@ -9,13 +9,14 @@ import {
   ArrowUpRight,
   Download,
   Plus,
+  Trash2,
   UserRound,
   X,
   Sparkles,
 } from "lucide-react";
 import { usePalaceStore } from "@/store/usePalaceStore";
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import RoomIcon from "./RoomIcon";
 import { useAccountStore } from "@/store/useAccountStore";
 import { getRoomDisplayColor } from "@/lib/room-color";
@@ -42,8 +43,12 @@ export default function Navigation({
   const username = useAccountStore((s) => s.username);
   const activeRoomId = usePalaceStore((s) => s.activeRoomId);
   const setRoom = usePalaceStore((s) => s.setRoom);
+  const anchors = usePalaceStore((s) => s.anchors);
+  const deleteRoom = usePalaceStore((s) => s.deleteRoom);
+  const [deleteRoomId, setDeleteRoomId] = useState<string | null>(null);
   useBackDismiss(mobileOpen, onClose);
   const go = (next: WorkspacePage) => {
+    setDeleteRoomId(null);
     onNavigate(next);
     onClose();
   };
@@ -68,7 +73,7 @@ export default function Navigation({
       if (event.key !== "Tab") return;
       const items = [
         ...(sidebarRef.current?.querySelectorAll<HTMLElement>(
-          "a[href], button",
+          "a[href], button:not([disabled])",
         ) ?? []),
       ].filter((item) => item.getClientRects().length > 0);
       const first = items[0];
@@ -93,6 +98,9 @@ export default function Navigation({
       desktop.removeEventListener("change", handleResize);
       previousFocus?.focus();
     };
+  }, [mobileOpen]);
+  useEffect(() => {
+    if (!mobileOpen) setDeleteRoomId(null);
   }, [mobileOpen]);
   return (
     <>
@@ -182,36 +190,93 @@ export default function Navigation({
         <nav className="room-nav" aria-label="Memory palaces">
           {rooms.map((room) => {
             const displayColor = getRoomDisplayColor(room.color);
+            const anchorCount = anchors.filter(
+              (anchor) => anchor.roomId === room.id,
+            ).length;
             return (
-              <button
-                key={room.id}
-                className={
-                  activeRoomId === room.id && page === "palace" ? "current" : ""
-                }
-                onClick={() => {
-                  setRoom(room.id);
-                  go("palace");
-                }}
-              >
-                <span
-                  className="room-icon"
-                  style={{
-                    color: displayColor,
-                    background: `${displayColor}16`,
+              <div className="room-nav-item" key={room.id}>
+                <button
+                  className={`room-nav-select ${activeRoomId === room.id && page === "palace" ? "current" : ""}`}
+                  onClick={() => {
+                    setDeleteRoomId(null);
+                    setRoom(room.id);
+                    go("palace");
                   }}
                 >
-                  <RoomIcon icon={room.icon} />
-                </span>
-                <span className="room-nav-name" title={room.name}>
-                  {room.name}
-                </span>
-                {activeRoomId === room.id && page === "palace" && (
-                  <span className="active-room-dot" />
+                  <span
+                    className="room-icon"
+                    style={{
+                      color: displayColor,
+                      background: `${displayColor}16`,
+                    }}
+                  >
+                    <RoomIcon icon={room.icon} />
+                  </span>
+                  <span className="room-nav-name" title={room.name}>
+                    {room.name}
+                  </span>
+                  {activeRoomId === room.id && page === "palace" && (
+                    <span className="active-room-dot" />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  className="room-nav-delete"
+                  aria-label={`Delete ${room.name} palace`}
+                  title={
+                    rooms.length <= 1
+                      ? "At least one palace must remain"
+                      : `Delete ${room.name} palace`
+                  }
+                  disabled={rooms.length <= 1}
+                  onClick={() =>
+                    setDeleteRoomId((current) =>
+                      current === room.id ? null : room.id,
+                    )
+                  }
+                >
+                  <Trash2 size={14} />
+                </button>
+                {deleteRoomId === room.id && (
+                  <div className="room-delete-confirm" role="alert">
+                    <strong>Delete {room.name}?</strong>
+                    <p>
+                      This permanently removes {anchorCount}{" "}
+                      {anchorCount === 1 ? "anchor" : "anchors"} and their
+                      recall progress.
+                    </p>
+                    <div className="room-delete-actions">
+                      <button
+                        type="button"
+                        className="room-delete-cancel"
+                        onClick={() => setDeleteRoomId(null)}
+                      >
+                        Keep palace
+                      </button>
+                      <button
+                        type="button"
+                        className="room-delete-commit"
+                        onClick={() => {
+                          deleteRoom(room.id);
+                          setDeleteRoomId(null);
+                          onClose();
+                        }}
+                      >
+                        Delete palace
+                      </button>
+                    </div>
+                  </div>
                 )}
-              </button>
+              </div>
             );
           })}
-          <button className="create-room-button" onClick={onCreateRoom}>
+          <button
+            className="create-room-button"
+            onClick={() => {
+              setDeleteRoomId(null);
+              onCreateRoom();
+            }}
+          >
             <Plus size={16} />
             <span>Create palace</span>
           </button>

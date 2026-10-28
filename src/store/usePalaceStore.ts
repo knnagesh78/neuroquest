@@ -40,6 +40,7 @@ export interface PalaceState {
   selectAnchor: (id: string | null) => void;
   setRoom: (roomId: string) => void;
   addRoom: (input: NewRoomInput) => string;
+  deleteRoom: (id: string) => void;
   resetCamera: () => void;
   addAnchor: (input: NewAnchorInput) => string;
   updateAnchor: (id: string, updates: AnchorUpdate) => void;
@@ -396,6 +397,51 @@ export function createPalaceStore(options?: {
           }));
           return id;
         },
+        deleteRoom: (id) =>
+          set((state) => {
+            const roomIndex = state.rooms.findIndex((room) => room.id === id);
+            if (roomIndex === -1 || state.rooms.length <= 1) return state;
+
+            const rooms = state.rooms.filter((room) => room.id !== id);
+            const removedAnchorIds = new Set(
+              state.anchors
+                .filter((anchor) => anchor.roomId === id)
+                .map((anchor) => anchor.id),
+            );
+            const anchors = state.anchors.filter(
+              (anchor) => anchor.roomId !== id,
+            );
+            const isActiveRoom = state.activeRoomId === id;
+            const selectedAnchorRemoved =
+              state.selectedAnchorId !== null &&
+              removedAnchorIds.has(state.selectedAnchorId);
+            const resetSelection = isActiveRoom || selectedAnchorRemoved;
+            const sessionRatings = isActiveRoom
+              ? {}
+              : Object.fromEntries(
+                  Object.entries(state.sessionRatings).filter(
+                    ([anchorId]) => !removedAnchorIds.has(anchorId),
+                  ),
+                );
+
+            return {
+              rooms,
+              anchors,
+              activeRoomId: isActiveRoom
+                ? rooms[Math.min(roomIndex, rooms.length - 1)].id
+                : state.activeRoomId,
+              ...(resetSelection
+                ? {
+                    mode: "explore" as const,
+                    selectedAnchorId: null,
+                    cameraTarget: null,
+                    isAddOpen: false,
+                    cameraResetKey: state.cameraResetKey + 1,
+                  }
+                : {}),
+              sessionRatings,
+            };
+          }),
         resetCamera: () =>
           set((state) => ({
             selectedAnchorId: null,
