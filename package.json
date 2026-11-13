@@ -52,7 +52,7 @@
   },
   "overrides": {
     "@grpc/grpc-js": "^1.14.6",
-    "basic-ftp": "^6.2.3",
+    "basic-ftp": "^6.2.6",
     "firebase-tools": {
       "@opentelemetry/core": "^2.8.0",
       "gaxios": {
